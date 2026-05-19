@@ -255,7 +255,7 @@ function loadPage(page) {
     transactions:'ประวัติเคลื่อนไหว', reports:'รายงาน',
     users:'จัดการผู้ใช้งาน', settings:'ตั้งค่าระบบ', profile:'โปรไฟล์',
     assets:'ทะเบียนครุภัณฑ์', assetstatus:'อัปเดตสถานภาพ', assetmaintenance:'ซ่อมบำรุง',
-    assetcommittees:'คณะกรรมการ', assetreports:'รายงานครุภัณฑ์'
+    assetcommittees:'คณะกรรมการ', assetreports:'รายงานครุภัณฑ์', depreciation:'อัตราค่าเสื่อมราคา / อายุการใช้งาน'
   };
   document.getElementById('pageTitle').textContent = titles[page] || page;
   document.getElementById('pageBreadcrumb').textContent = 'ระบบวัสดุสิ้นเปลือง / ' + (titles[page] || page);
@@ -282,6 +282,7 @@ function loadPage(page) {
   else if (page === 'assetmaintenance')   renderAssetMaintenance();
   else if (page === 'assetcommittees')    renderAssetCommittees();
   else if (page === 'assetreports')       renderAssetReports();
+  else if (page === 'depreciation')       renderDepreciation();
 }
 
 function toggleSidebar() {
@@ -3491,6 +3492,86 @@ function deleteCommitteeConfirm(id) {
   }, 'ลบ');
 }
 
+// ===== DEPRECIATION RATES / USEFUL LIFE =====
+function renderDepreciation() {
+  showLoading('โหลดข้อมูล...');
+  Promise.all([
+    callAPI('getAssetCategories', AUTH.token),
+    callAPI('getAssetTypes', AUTH.token)
+  ]).then(function(res){
+    hideLoading();
+    if (!res[0].success || !res[1].success) { showError('โหลดข้อมูลไม่สำเร็จ'); return; }
+    var cats = res[0].data || [];
+    var types = res[1].data || [];
+    var html = '<div class="fade-in space-y-4">';
+    html += '<div class="card"><div class="card-header"><h3 class="font-semibold text-gray-700 flex items-center gap-2"><i class="fi fi-rr-chart-pie-alt text-navy-600"></i> อัตราค่าเสื่อมราคา / อายุการใช้งาน</h3></div>';
+    html += '<div class="card-body"><p class="text-sm text-gray-500 mb-3">จัดการอายุการใช้งานและอัตราค่าเสื่อมราคาตามชนิดครุภัณฑ์</p>';
+    html += '<div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-600"><tr><th class="px-4 py-2 text-left w-12">#</th><th class="px-4 py-2 text-left">ประเภท</th><th class="px-4 py-2 text-left">ชนิดครุภัณฑ์</th><th class="px-4 py-2 text-center">อายุการใช้งาน (ปี)</th><th class="px-4 py-2 text-center">อัตราค่าเสื่อม (%/ปี)</th><th class="px-4 py-2 text-center w-24">จัดการ</th></tr></thead><tbody class="divide-y divide-gray-100">';
+    var rowNum = 0;
+    cats.forEach(function(cat){
+      var catTypes = types.filter(function(t){ return t.category_id === cat.id; });
+      catTypes.forEach(function(t, idx){
+        rowNum++;
+        var life = t.useful_life ? parseInt(t.useful_life) : null;
+        var rate = t.depreciation_rate ? parseFloat(t.depreciation_rate) : null;
+        var rateDisplay = rate !== null ? rate.toFixed(2) + '%' : '<span class="text-gray-300">-</span>';
+        var lifeDisplay = life !== null ? life : '<span class="text-gray-300">-</span>';
+        html += '<tr>';
+        html += '<td class="px-4 py-2 text-gray-500">' + rowNum + '</td>';
+        html += '<td class="px-4 py-2 font-medium text-gray-800">' + (idx===0 ? escHtml(cat.name) : '') + '</td>';
+        html += '<td class="px-4 py-2 text-gray-700">' + escHtml(t.name) + '</td>';
+        html += '<td class="px-4 py-2 text-center font-medium text-blue-600">' + lifeDisplay + '</td>';
+        html += '<td class="px-4 py-2 text-center font-medium text-amber-600">' + rateDisplay + '</td>';
+        html += '<td class="px-4 py-2 text-center"><button onclick="openDepreciationForm(' + JSON.stringify(t).replace(/"/g,'&quot;') + ',' + JSON.stringify(cat).replace(/"/g,'&quot;') + ')" class="w-7 h-7 bg-amber-100 text-amber-700 rounded-lg flex items-center justify-center hover:bg-amber-200"><i class="fi fi-rr-edit text-xs"></i></button></td>';
+        html += '</tr>';
+      });
+    });
+    if (!rowNum) html += '<tr><td colspan="6" class="text-center py-6 text-gray-400">ไม่มีข้อมูล</td></tr>';
+    html += '</tbody></table></div>';
+    html += '</div></div></div>';
+    document.getElementById('mainContent').innerHTML = html;
+  }).catch(function(){ hideLoading(); showError('โหลดข้อมูลไม่สำเร็จ'); });
+}
+
+function openDepreciationForm(type, cat) {
+  type = type || {};
+  cat = cat || {};
+  var body = '<div class="space-y-4">';
+  body += '<input type="hidden" id="depTypeId" value="' + (type.id||'') + '">';
+  body += '<div class="bg-gray-50 rounded-lg p-3">';
+  body += '<p class="text-xs text-gray-500">ชนิดครุภัณฑ์</p>';
+  body += '<p class="font-semibold text-gray-800">' + escHtml(type.name||'') + '</p>';
+  body += '<p class="text-xs text-gray-500 mt-1">' + escHtml(cat.name||'') + '</p>';
+  body += '</div>';
+  body += '<div class="grid grid-cols-2 gap-3">';
+  body += '<div><label class="form-label">อายุการใช้งาน (ปี)</label><input type="number" id="depLife" value="' + (type.useful_life||'') + '" class="form-input" placeholder="เช่น 5"></div>';
+  body += '<div><label class="form-label">อัตราค่าเสื่อม (%/ปี)</label><input type="number" id="depRate" value="' + (type.depreciation_rate||'') + '" class="form-input" placeholder="เช่น 20" step="0.01"></div>';
+  body += '</div>';
+  body += '</div>';
+  var footer = '<button onclick="closeModal()" class="btn-secondary">ยกเลิก</button>';
+  footer += '<button onclick="submitDepreciation()" class="btn-primary"><i class="fi fi-rr-disk mr-1"></i>บันทึก</button>';
+  openModal('แก้ไขค่าเสื่อมราคา', body, footer);
+}
+
+function submitDepreciation() {
+  var typeId = document.getElementById('depTypeId').value;
+  var life = parseInt(document.getElementById('depLife').value||0)||null;
+  var rate = parseFloat(document.getElementById('depRate').value||0)||null;
+  showLoading('กำลังบันทึก...');
+  callAPI('getAssetTypes', AUTH.token).then(function(res){
+    if (!res.success) { hideLoading(); showError(res.message); return; }
+    var type = (res.data||[]).find(function(t){ return t.id === typeId; });
+    if (!type) { hideLoading(); showError('ไม่พบข้อมูล'); return; }
+    type.useful_life = life;
+    type.depreciation_rate = rate;
+    return callAPI('saveAssetType', AUTH.token, type);
+  }).then(function(res){
+    hideLoading(); closeModal();
+    if (res && res.success) { showSuccess(res.message); renderDepreciation(); }
+    else if (res) showError(res.message);
+  }).catch(function(){ hideLoading(); showError('เกิดข้อผิดพลาด'); });
+}
+
 var _arTab = 'list', _arFiscal = '', _arAmphoe = 'all', _arCat = 'all', _arStatus = 'all';
 var _arAssets = [], _arCats = [], _arAmphoes = [], _arCommittee = null;
 
@@ -3808,6 +3889,10 @@ function openTypeForm(type) {
   body += '<option value="">เลือกประเภท</option>';
   _settingsCats.forEach(function(c){ body += '<option value="' + c.id + '"' + ((type.category_id===c.id)?' selected':'') + '>' + escHtml(c.name) + '</option>'; });
   body += '</select></div>';
+  body += '<div class="grid grid-cols-2 gap-3">';
+  body += '<div><label class="form-label">อายุการใช้งาน (ปี)</label><input type="number" id="typeLife" value="' + (type.useful_life||'') + '" class="form-input" placeholder="เช่น 5"></div>';
+  body += '<div><label class="form-label">อัตราค่าเสื่อม (%/ปี)</label><input type="number" id="typeRate" value="' + (type.depreciation_rate||'') + '" class="form-input" placeholder="เช่น 20" step="0.01"></div>';
+  body += '</div>';
   body += '<div class="flex items-center gap-2"><input type="checkbox" id="typeActive" ' + (type.is_active!==false?'checked':'') + ' class="w-4 h-4 rounded accent-navy-700"><label for="typeActive" class="text-sm text-gray-700">ใช้งาน</label></div>';
   body += '</div>';
   var footer = '<button onclick="closeModal()" class="btn-secondary">ยกเลิก</button>';
@@ -3815,7 +3900,7 @@ function openTypeForm(type) {
   openModal(type.id ? 'แก้ไขชนิดครุภัณฑ์' : 'เพิ่มชนิดครุภัณฑ์', body, footer);
 }
 function submitType() {
-  var data = { id: document.getElementById('typeId').value, name: document.getElementById('typeName').value.trim(), category_id: document.getElementById('typeCatId').value, is_active: document.getElementById('typeActive').checked };
+  var data = { id: document.getElementById('typeId').value, name: document.getElementById('typeName').value.trim(), category_id: document.getElementById('typeCatId').value, is_active: document.getElementById('typeActive').checked, useful_life: parseInt(document.getElementById('typeLife').value||0)||null, depreciation_rate: parseFloat(document.getElementById('typeRate').value||0)||null };
   if (!data.name || !data.category_id) { showError('กรุณากรอกชื่อและเลือกประเภท'); return; }
   showLoading('กำลังบันทึก...');
   callAPI('saveAssetType', AUTH.token, data).then(function(res) {

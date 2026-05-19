@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>ระบบวัสดุสิ้นเปลือง</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="styles.css?v=6">
+  <link rel="stylesheet" href="styles.css?v=7">
   <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -251,6 +251,12 @@
                 <i class="fi fi-rr-users-alt w-4 text-center text-base"></i><span>คณะกรรมการ</span>
               </button>
             </li>
+            <li id="menuDepreciation">
+              <button onclick="loadPage('depreciation')" data-page="depreciation"
+                class="menu-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm hover:bg-navy-700 transition text-blue-100">
+                <i class="fi fi-rr-chart-pie-alt w-4 text-center text-base"></i><span>อัตราค่าเสื่อมราคา / อายุการใช้งาน</span>
+              </button>
+            </li>
           </ul>
         </div>
       </div>
@@ -394,7 +400,7 @@
 
 <script src="api.js?v=3"></script>
 <script src="mock-api.js"></script>
-<script src="app.js?v=7"></script>
+<script src="app.js?v=8"></script>
 
 </body>
 </html>
