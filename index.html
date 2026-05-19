@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>ระบบวัสดุสิ้นเปลือง</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="styles.css?v=11">
+  <link rel="stylesheet" href="styles.css?v=12">
   <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -194,7 +194,7 @@
             <li>
               <button onclick="loadPage('transactions')" data-page="transactions"
                 class="menu-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm hover:bg-navy-700 transition text-blue-100">
-                <i class="fi fi-rr-time-past w-4 text-center text-base"></i><span>ประวัติเคลื่อนไหว</span>
+                <i class="fi fi-rr-list w-4 text-center text-base"></i><span>ประวัติเคลื่อนไหว</span>
               </button>
             </li>
           </ul>
@@ -230,25 +230,25 @@
             <li id="menuAssets">
               <button onclick="loadPage('assets')" data-page="assets"
                 class="menu-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm hover:bg-navy-700 transition text-blue-100">
-                <i class="fi fi-rr-box w-4 text-center text-base"></i><span>ทะเบียนครุภัณฑ์</span>
+                <i class="fi fi-rr-box-alt w-4 text-center text-base"></i><span>ทะเบียนครุภัณฑ์</span>
               </button>
             </li>
             <li id="menuAssetStatus">
               <button onclick="loadPage('assetstatus')" data-page="assetstatus"
                 class="menu-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm hover:bg-navy-700 transition text-blue-100">
-                <i class="fi fi-rr-tag w-4 text-center text-base"></i><span>อัปเดตสถานภาพ</span>
+                <i class="fi fi-rr-shield-check w-4 text-center text-base"></i><span>อัปเดตสถานภาพ</span>
               </button>
             </li>
             <li id="menuAssetMaintenance">
               <button onclick="loadPage('assetmaintenance')" data-page="assetmaintenance"
                 class="menu-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm hover:bg-navy-700 transition text-blue-100">
-                <i class="fi fi-rr-wrench w-4 text-center text-base"></i><span>ซ่อมบำรุง</span>
+                <i class="fi fi-rr-clipboard-list w-4 text-center text-base"></i><span>ซ่อมบำรุง</span>
               </button>
             </li>
             <li id="menuAssetCommittees">
               <button onclick="loadPage('assetcommittees')" data-page="assetcommittees"
                 class="menu-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm hover:bg-navy-700 transition text-blue-100">
-                <i class="fi fi-rr-users-alt w-4 text-center text-base"></i><span>คณะกรรมการ</span>
+                <i class="fi fi-rr-users w-4 text-center text-base"></i><span>คณะกรรมการ</span>
               </button>
             </li>
             <li id="menuDepreciation">
@@ -260,7 +260,7 @@
             <li id="menuAssetRegister">
               <button onclick="loadPage('assetregister')" data-page="assetregister"
                 class="menu-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm hover:bg-navy-700 transition text-blue-100">
-                <i class="fi fi-rr-file-invoice w-4 text-center text-base"></i><span>ทะเบียนคุมสินทรัพย์</span>
+                <i class="fi fi-rr-print w-4 text-center text-base"></i><span>ทะเบียนคุมสินทรัพย์</span>
               </button>
             </li>
           </ul>
@@ -278,7 +278,7 @@
             <li id="menuAssetReports">
               <button onclick="loadPage('assetreports')" data-page="assetreports"
                 class="menu-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm hover:bg-navy-700 transition text-blue-100">
-                <i class="fi fi-rr-file-invoice w-4 text-center text-base"></i><span>รายงานครุภัณฑ์</span>
+                <i class="fi fi-rr-clipboard-list w-4 text-center text-base"></i><span>รายงานครุภัณฑ์</span>
               </button>
             </li>
           </ul>
@@ -321,7 +321,7 @@
           <p id="sidebarRole" class="text-xs text-blue-300 truncate">—</p>
         </div>
         <button onclick="event.stopPropagation(); doLogout()" title="ออกจากระบบ" class="text-blue-400 hover:text-white transition">
-          <i class="fi fi-rr-sign-out-alt text-sm"></i>
+          <i class="fi fi-rr-sign-out text-sm"></i>
         </button>
       </div>
     </div>
