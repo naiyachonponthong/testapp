@@ -193,6 +193,7 @@
 .ar-qr img, .ar-qr canvas { width: 48px !important; height: 48px !important; display: block; margin: 0 auto; }
 
 @media print {
+  @page { size: landscape; }
   body * { visibility: hidden; }
   #arPrintArea, #arPrintArea * { visibility: visible; }
   #arPrintArea { position: absolute; left: 0; top: 0; width: 100%; }
