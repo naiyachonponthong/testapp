@@ -255,7 +255,7 @@ function loadPage(page) {
     transactions:'ประวัติเคลื่อนไหว', reports:'รายงาน',
     users:'จัดการผู้ใช้งาน', settings:'ตั้งค่าระบบ', profile:'โปรไฟล์',
     assets:'ทะเบียนครุภัณฑ์', assetstatus:'อัปเดตสถานภาพ', assetmaintenance:'ซ่อมบำรุง',
-    assetcommittees:'คณะกรรมการ', assetreports:'รายงานครุภัณฑ์', depreciation:'อัตราค่าเสื่อมราคา / อายุการใช้งาน'
+    assetcommittees:'คณะกรรมการ', assetreports:'รายงานครุภัณฑ์', depreciation:'ค่าเสื่อม/อายุใช้งาน'
   };
   document.getElementById('pageTitle').textContent = titles[page] || page;
   document.getElementById('pageBreadcrumb').textContent = 'ระบบวัสดุสิ้นเปลือง / ' + (titles[page] || page);
