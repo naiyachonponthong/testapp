@@ -256,7 +256,7 @@ function loadPage(page) {
     transactions:'ประวัติเคลื่อนไหว', reports:'รายงาน',
     users:'จัดการผู้ใช้งาน', settings:'ตั้งค่าระบบ', profile:'โปรไฟล์',
     assets:'ทะเบียนครุภัณฑ์', assetstatus:'อัปเดตสถานภาพ', assetmaintenance:'ซ่อมบำรุง',
-    assetcommittees:'คณะกรรมการ', assetreports:'รายงานครุภัณฑ์', depreciation:'ค่าเสื่อม/อายุใช้งาน'
+    assetcommittees:'คณะกรรมการ', assetreports:'รายงานครุภัณฑ์', depreciation:'ค่าเสื่อม/อายุใช้งาน', assetregister:'ทะเบียนคุมสินทรัพย์'
   };
   document.getElementById('pageTitle').textContent = titles[page] || page;
   document.getElementById('pageBreadcrumb').textContent = 'ระบบวัสดุสิ้นเปลือง / ' + (titles[page] || page);
@@ -284,6 +284,7 @@ function loadPage(page) {
   else if (page === 'assetcommittees')    renderAssetCommittees();
   else if (page === 'assetreports')       renderAssetReports();
   else if (page === 'depreciation')       renderDepreciation();
+  else if (page === 'assetregister')        renderAssetRegister();
 }
 
 function toggleSidebar() {
@@ -3839,6 +3840,34 @@ function submitDepreciation() {
     if (res && res.success) { showSuccess(res.message); renderDepreciation(); }
     else if (res) showError(res.message);
   }).catch(function(){ hideLoading(); showError('เกิดข้อผิดพลาด'); });
+}
+
+// ===== ASSET REGISTER (ทะเบียนคุมสินทรัพย์รายตัว) =====
+function renderAssetRegister() {
+  if (AUTH.user.role === 'employee') { loadPage('dashboard'); return; }
+  showLoading('โหลดข้อมูล...');
+  callAPI('getAssets', AUTH.token).then(function(res) {
+    hideLoading();
+    var assets = res.data || [];
+    assets.sort(function(a,b){ return (a.asset_code||'').localeCompare(b.asset_code||''); });
+    var html = '<div class="fade-in space-y-4">';
+    html += '<div class="card"><div class="card-header"><h3 class="font-semibold text-gray-700 flex items-center gap-2"><i class="fi fi-rr-file-invoice text-navy-600"></i> ทะเบียนคุมสินทรัพย์รายตัว</h3></div>';
+    html += '<div class="card-body">';
+    html += '<div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-600"><tr><th class="px-4 py-3 text-left">รหัส</th><th class="px-4 py-3 text-left">รายการ</th><th class="px-4 py-3 text-center">สถานะ</th><th class="px-4 py-3 text-right">ราคา</th><th class="px-4 py-3 text-center w-20"></th></tr></thead><tbody class="divide-y divide-gray-100">';
+    if (!assets.length) {
+      html += '<tr><td colspan="5" class="text-center py-10 text-gray-400">ไม่พบข้อมูลครุภัณฑ์</td></tr>';
+    } else {
+      assets.forEach(function(a) {
+        html += '<tr><td class="px-4 py-2.5 text-xs text-gray-500">' + escHtml(a.asset_code||'-') + '</td>';
+        html += '<td class="px-4 py-2.5"><p class="font-medium text-gray-800 text-sm">' + escHtml(a.description) + '</p><p class="text-xs text-gray-500">' + escHtml(a.brand_model||'') + '</p></td>';
+        html += '<td class="px-4 py-2.5 text-center"><span class="px-2 py-0.5 rounded-full text-xs font-medium ' + _assetStatusClass(a.status) + '">' + _assetStatusLabel(a.status) + '</span></td>';
+        html += '<td class="px-4 py-2.5 text-right text-sm font-medium text-gray-800">' + _fmtMoney(a.unit_price) + '</td>';
+        html += '<td class="px-4 py-2.5 text-center"><button onclick="printAssetRegister(\'' + a.id + '\')" class="w-7 h-7 bg-navy-100 text-navy-700 rounded-lg flex items-center justify-center hover:bg-navy-200" title="พิมพ์ทะเบียนคุมฯ"><i class="fi fi-rr-print text-xs"></i></button></td></tr>';
+      });
+    }
+    html += '</tbody></table></div></div></div></div>';
+    document.getElementById('mainContent').innerHTML = html;
+  }).catch(function(){ hideLoading(); showError('โหลดข้อมูลไม่สำเร็จ'); });
 }
 
 var _arTab = 'list', _arFiscal = '', _arAmphoe = 'all', _arCat = 'all', _arStatus = 'all';
