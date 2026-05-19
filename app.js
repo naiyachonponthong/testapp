@@ -3458,23 +3458,26 @@ function _buildRegisterHTML(a, cat, type, amphoe, orgName, logoUrl, schedule, us
 
   var html = '';
 
-  // ── Header: org+title centered, QR top-right corner ──
-  html += '<div style="position:relative;margin-bottom:14px;">';
-  // QR pinned to top-right
-  if (qrDataUrl) {
-    html += '<div style="position:absolute;top:0;right:0;text-align:center;">';
-    html += '<img src="' + qrDataUrl + '" style="width:80px;height:80px;display:block;">';
-    html += '<div style="font-size:9px;color:#888;margin-top:2px;">สแกนดูรายละเอียด</div>';
-    html += '</div>';
-  }
-  // Center block: logo + org name + title
-  html += '<div style="text-align:center;padding-right:' + (qrDataUrl ? '96px' : '0') + ';">';
-  if (logoUrl) html += '<img src="' + logoUrl + '" style="width:50px;height:50px;object-fit:contain;display:inline-block;margin-bottom:4px;">';
-  html += '<div style="font-weight:700;font-size:14px;line-height:1.4;">' + escHtml(orgName) + '</div>';
-  html += '<div style="font-size:11px;color:#555;margin-bottom:6px;">' + escHtml(amphoe ? amphoe.name : '') + '</div>';
+  // ── Header: 3-column table layout — org | title | QR ──
+  html += '<table style="width:100%;border:none;margin-bottom:14px;"><tr>';
+  // Left: org
+  html += '<td style="width:33%;border:none;vertical-align:middle;padding:0 8px 0 0;">';
+  if (logoUrl) html += '<img src="' + logoUrl + '" style="width:44px;height:44px;object-fit:contain;display:block;margin-bottom:3px;">';
+  html += '<div style="font-weight:700;font-size:13px;line-height:1.4;">' + escHtml(orgName) + '</div>';
+  html += '<div style="font-size:11px;color:#555;">' + escHtml(amphoe ? amphoe.name : '') + '</div>';
+  html += '</td>';
+  // Center: title
+  html += '<td style="width:34%;border:none;vertical-align:middle;text-align:center;padding:0 4px;">';
   html += '<div style="font-size:18px;font-weight:700;">ทะเบียนคุมสินทรัพย์รายตัว</div>';
-  html += '</div>';
-  html += '</div>';
+  html += '</td>';
+  // Right: QR
+  html += '<td style="width:33%;border:none;vertical-align:middle;text-align:right;padding:0 0 0 8px;">';
+  if (qrDataUrl) {
+    html += '<img src="' + qrDataUrl + '" style="width:80px;height:80px;display:inline-block;">';
+    html += '<div style="font-size:9px;color:#888;margin-top:2px;">สแกนดูรายละเอียด</div>';
+  }
+  html += '</td>';
+  html += '</tr></table>';
 
   // ── Info table: 5 columns, 3 rows ──
   // Row 1: 5 cells
