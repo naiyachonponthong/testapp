@@ -14,6 +14,7 @@
 }
 
 * { font-family: 'Sarabun', sans-serif; }
+.fi, .fi::before { font-family: 'uicons-regular-rounded' !important; }
 
 /* Scrollbar hide */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
