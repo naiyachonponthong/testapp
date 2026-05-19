@@ -3398,16 +3398,16 @@ function _openRegisterModal(a, cat, type, amphoe, orgName, logoUrl, schedule, us
   // Store for actual print
   window._lastRegisterPrintHTML = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ทะเบียนคุมสินทรัพย์รายตัว</title>' +
     '<style>' +
-    '@page{size:A4 landscape;margin:10mm 12mm}' +
-    'html,body{margin:0;padding:0;width:100%;max-width:100%;overflow-x:hidden}' +
-    'body{font-family:sarabun,sans-serif;background:#fff;color:#000;font-size:10px;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
-    '*{box-sizing:border-box;word-break:break-word;overflow-wrap:break-word;max-width:100%}' +
-    '.print-wrap{width:100%;max-width:100%;padding:0;margin:0}' +
-    'table{border-collapse:collapse;width:100%;table-layout:fixed;max-width:100%}' +
+    '@page{size:A4 landscape;margin:0}' +
+    'html{margin:0;padding:0}' +
+    'body{font-family:sarabun,sans-serif;margin:0;padding:0;background:#fff;color:#000;font-size:10px;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+    '*{box-sizing:border-box;word-break:break-word;overflow-wrap:break-word}' +
+    '.print-wrap{padding:14mm 16mm;width:100%;max-width:100%}' +
+    'table{border-collapse:collapse;width:100%;table-layout:fixed}' +
     'th,td{border:1px solid #999;padding:2px 3px;font-size:9px;word-break:break-word;overflow-wrap:break-word;vertical-align:top;overflow:hidden}' +
     'th{background:#f3f4f6 !important;text-align:center;font-weight:600}' +
     'img{max-width:100%;height:auto}' +
-    '@media print{.no-print{display:none}body{font-size:9px}}' +
+    '@media print{.no-print{display:none}}' +
     '</style>' +
     '</head><body><div class="print-wrap">' + inner + '</div></body></html>';
 
