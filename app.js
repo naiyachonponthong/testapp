@@ -3430,104 +3430,220 @@ function deleteCommitteeConfirm(id) {
   }, 'ลบ');
 }
 
+var _arTab = 'list', _arFiscal = '', _arAmphoe = 'all', _arCat = 'all', _arStatus = 'all';
+var _arAssets = [], _arCats = [], _arAmphoes = [], _arCommittee = null;
+
 function renderAssetReports() {
   if (AUTH.user.role === 'employee') { loadPage('dashboard'); return; }
   showLoading('โหลดข้อมูล...');
   Promise.all([
     callAPI('getAssets', AUTH.token),
     callAPI('getAssetCategories', AUTH.token),
-    callAPI('getAmphoes', AUTH.token)
+    callAPI('getAmphoes', AUTH.token),
+    callAPI('getAssetCommittees', AUTH.token)
   ]).then(function(res) {
     hideLoading();
-    var assets = res[0].data || [];
-    var cats = res[1].data || [];
-    var amphoes = res[2].data || [];
-    buildAssetReportsPage(assets, cats, amphoes);
+    _arAssets = res[0].data || [];
+    _arCats = res[1].data || [];
+    _arAmphoes = res[2].data || [];
+    var comm = res[3].data || [];
+    _arCommittee = comm.length ? comm[0] : null;
+    buildAssetReportsPage();
   }).catch(function() { hideLoading(); showError('โหลดข้อมูลไม่สำเร็จ'); });
 }
 
-function buildAssetReportsPage(assets, cats, amphoes) {
-  var total = assets.length;
-  var active = assets.filter(function(a){ return a.status === 'active'; }).length;
-  var damaged = assets.filter(function(a){ return a.status === 'damaged'; }).length;
-  var disposed = assets.filter(function(a){ return a.status === 'disposed'; }).length;
-  var totalValue = assets.reduce(function(s,a){ return s + (a.unit_price||0); }, 0);
+function _arFiltered() {
+  return _arAssets.filter(function(a) {
+    if (_arFiscal && String(a.fiscal_year||'') !== String(_arFiscal)) return false;
+    if (_arAmphoe !== 'all' && a.amphoe_id !== _arAmphoe) return false;
+    if (_arCat !== 'all' && a.category_id !== _arCat) return false;
+    if (_arStatus !== 'all' && a.status !== _arStatus) return false;
+    return true;
+  });
+}
 
+function buildAssetReportsPage() {
+  var assets = _arFiltered();
   var html = '<div class="fade-in space-y-4">';
-  html += '<h3 class="font-semibold text-gray-700 flex items-center gap-2"><i class="fi fi-rr-file-invoice text-navy-600"></i> รายงานครุภัณฑ์</h3>';
 
-  // KPI cards
-  html += '<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">';
-  var kpis = [
-    { label:'ทั้งหมด', value:total, icon:'fi-rr-box', color:'bg-blue-100', iconColor:'text-blue-600' },
-    { label:'ใช้งานได้', value:active, icon:'fi-rr-check-circle', color:'bg-green-100', iconColor:'text-green-600' },
-    { label:'ชำรุด/รอจำหน่าย', value:damaged, icon:'fi-rr-triangle-warning', color:'bg-amber-100', iconColor:'text-amber-600' },
-    { label:'มูลค่ารวม', value:_fmtMoney(totalValue), icon:'fi-rr-coins', color:'bg-purple-100', iconColor:'text-purple-600' }
-  ];
-  kpis.forEach(function(k) {
-    html += '<div class="card kpi-card p-4">';
-    html += '<div class="w-10 h-10 ' + k.color + ' rounded-xl flex items-center justify-center mb-2"><i class="fi ' + k.icon + ' ' + k.iconColor + ' text-lg"></i></div>';
-    html += '<p class="text-xl font-bold text-gray-800">' + k.value + '</p>';
-    html += '<p class="text-xs text-gray-500">' + k.label + '</p></div>';
-  });
+  // Tabs
+  html += '<div class="flex gap-2 border-b border-gray-200 mb-2">';
+  html += '<button onclick="_arSetTab(\'list\')" class="px-4 py-2 text-sm font-medium ' + (_arTab==='list'?'text-navy-700 border-b-2 border-navy-700':'text-gray-500 hover:text-gray-700') + '">รายการครุภัณฑ์</button>';
+  html += '<button onclick="_arSetTab(\'summary\')" class="px-4 py-2 text-sm font-medium ' + (_arTab==='summary'?'text-navy-700 border-b-2 border-navy-700':'text-gray-500 hover:text-gray-700') + '">สรุปรายงานครุภัณฑ์</button>';
+  html += '<button onclick="_arSetTab(\'disposed\')" class="px-4 py-2 text-sm font-medium ' + (_arTab==='disposed'?'text-navy-700 border-b-2 border-navy-700':'text-gray-500 hover:text-gray-700') + '">สรุปครุภัณฑ์ที่จำหน่ายแล้ว</button>';
   html += '</div>';
 
-  // Charts
-  html += '<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">';
-  html += '<div class="card"><div class="card-header"><h3 class="font-semibold text-gray-700 text-sm flex items-center gap-2"><i class="fi fi-rr-chart-pie text-navy-600"></i> สัดส่วนตามประเภท</h3></div>';
-  html += '<div class="card-body"><div style="position:relative;height:220px"><canvas id="chartAssetCat"></canvas></div></div></div>';
-  html += '<div class="card"><div class="card-header"><h3 class="font-semibold text-gray-700 text-sm flex items-center gap-2"><i class="fi fi-rr-chart-bar text-navy-600"></i> สถานะครุภัณฑ์</h3></div>';
-  html += '<div class="card-body"><div style="position:relative;height:220px"><canvas id="chartAssetStatus"></canvas></div></div></div>';
+  // Filters
+  html += '<div id="arFilters" class="flex flex-wrap gap-2 items-end bg-white rounded-xl border border-gray-200 p-3">';
+  html += '<div class="flex-1 min-w-[140px]"><label class="text-xs text-gray-500 mb-1 block">ปีงบประมาณ</label><select id="arFiscal" onchange="_arUpdateFilter()" class="form-input text-sm">';
+  html += '<option value="">ทั้งหมด</option>';
+  var fiscalYears = {};
+  _arAssets.forEach(function(a){ if(a.fiscal_year) fiscalYears[a.fiscal_year]=1; });
+  Object.keys(fiscalYears).sort().reverse().forEach(function(y){ html += '<option value="' + y + '"' + (_arFiscal==y?' selected':'') + '>' + y + '</option>'; });
+  html += '</select></div>';
+  html += '<div class="flex-1 min-w-[140px]"><label class="text-xs text-gray-500 mb-1 block">หน่วยงาน</label><select id="arAmphoe" onchange="_arUpdateFilter()" class="form-input text-sm">';
+  html += '<option value="all">ทุกหน่วยงาน</option>';
+  _arAmphoes.forEach(function(am){ html += '<option value="' + am.id + '"' + (_arAmphoe===am.id?' selected':'') + '>' + escHtml(am.name) + '</option>'; });
+  html += '</select></div>';
+  html += '<div class="flex-1 min-w-[140px]"><label class="text-xs text-gray-500 mb-1 block">ประเภทครุภัณฑ์</label><select id="arCat" onchange="_arUpdateFilter()" class="form-input text-sm">';
+  html += '<option value="all">ทุกประเภท</option>';
+  _arCats.forEach(function(c){ html += '<option value="' + c.id + '"' + (_arCat===c.id?' selected':'') + '>' + escHtml(c.name) + '</option>'; });
+  html += '</select></div>';
+  html += '<div class="flex-1 min-w-[120px]"><label class="text-xs text-gray-500 mb-1 block">สถานะ</label><select id="arStatus" onchange="_arUpdateFilter()" class="form-input text-sm">';
+  html += '<option value="all">ทุกสถานะ</option>';
+  html += '<option value="active"' + (_arStatus==='active'?' selected':'') + '>ใช้งานได้</option>';
+  html += '<option value="damaged"' + (_arStatus==='damaged'?' selected':'') + '>ชำรุด/รอจำหน่าย</option>';
+  html += '<option value="disposed"' + (_arStatus==='disposed'?' selected':'') + '>จำหน่ายแล้ว</option>';
+  html += '</select></div>';
+  html += '<div class="flex gap-2"><button onclick="_arUpdateFilter()" class="btn-primary btn-sm"><i class="fi fi-rr-search mr-1"></i>ค้นหา</button>';
+  html += '<button onclick="window.print()" class="btn-secondary btn-sm"><i class="fi fi-rr-print mr-1"></i>พิมพ์</button></div>';
   html += '</div>';
 
-  // Summary table
-  html += '<div class="card overflow-hidden"><div class="card-header"><h3 class="font-semibold text-gray-700 text-sm flex items-center gap-2"><i class="fi fi-rr-list text-navy-600"></i> สรุปตามประเภท</h3></div>';
-  html += '<div class="card-body overflow-x-auto">';
-  html += '<table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-600">';
-  html += '<tr><th class="px-4 py-2 text-left">ประเภท</th><th class="px-4 py-2 text-right">จำนวน</th><th class="px-4 py-2 text-right">มูลค่า</th><th class="px-4 py-2 text-right">ใช้งานได้</th><th class="px-4 py-2 text-right">ชำรุด</th><th class="px-4 py-2 text-right">จำหน่ายแล้ว</th></tr></thead><tbody class="divide-y divide-gray-100">';
-  cats.forEach(function(c) {
-    var catAssets = assets.filter(function(a){ return a.category_id === c.id; });
-    if (!catAssets.length) return;
-    var catValue = catAssets.reduce(function(s,a){ return s+(a.unit_price||0); },0);
-    var catActive = catAssets.filter(function(a){ return a.status==='active'; }).length;
-    var catDamaged = catAssets.filter(function(a){ return a.status==='damaged'; }).length;
-    var catDisposed = catAssets.filter(function(a){ return a.status==='disposed'; }).length;
-    html += '<tr><td class="px-4 py-2 font-medium text-gray-800">' + escHtml(c.name) + '</td>';
-    html += '<td class="px-4 py-2 text-right">' + catAssets.length + '</td>';
-    html += '<td class="px-4 py-2 text-right font-medium">' + _fmtMoney(catValue) + '</td>';
-    html += '<td class="px-4 py-2 text-right text-green-600">' + catActive + '</td>';
-    html += '<td class="px-4 py-2 text-right text-amber-600">' + catDamaged + '</td>';
-    html += '<td class="px-4 py-2 text-right text-red-600">' + catDisposed + '</td></tr>';
-  });
-  html += '<tr class="bg-gray-50 font-semibold"><td class="px-4 py-2">รวมทั้งหมด</td><td class="px-4 py-2 text-right">' + total + '</td><td class="px-4 py-2 text-right">' + _fmtMoney(totalValue) + '</td><td class="px-4 py-2 text-right">' + active + '</td><td class="px-4 py-2 text-right">' + damaged + '</td><td class="px-4 py-2 text-right">' + disposed + '</td></tr>';
-  html += '</tbody></table></div></div>';
+  if (_arTab === 'list') html += _arBuildList(assets);
+  else if (_arTab === 'summary') html += _arBuildSummary(assets);
+  else if (_arTab === 'disposed') html += _arBuildDisposed(assets);
+
   html += '</div>';
   document.getElementById('mainContent').innerHTML = html;
+}
 
-  // Render charts
-  setTimeout(function() {
-    var catLabels = [], catData = [];
-    cats.forEach(function(c) {
-      var count = assets.filter(function(a){ return a.category_id === c.id; }).length;
-      if (count > 0) { catLabels.push(c.name); catData.push(count); }
-    });
-    var ctx1 = document.getElementById('chartAssetCat');
-    if (ctx1 && catLabels.length) {
-      new Chart(ctx1, {
-        type: 'doughnut',
-        data: { labels: catLabels, datasets: [{ data: catData, backgroundColor: ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4'] }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Sarabun', size: 11 }, boxWidth: 10, padding: 8 } } } }
-      });
-    }
-    var ctx2 = document.getElementById('chartAssetStatus');
-    if (ctx2) {
-      new Chart(ctx2, {
-        type: 'bar',
-        data: { labels: ['ใช้งานได้','ชำรุด/รอจำหน่าย','จำหน่ายแล้ว','รออนุมัติจำหน่าย'], datasets: [{ label: 'จำนวน', data: [active, damaged, disposed, assets.filter(function(a){return a.status==='pending_dispose';}).length], backgroundColor: ['#10b981','#f59e0b','#ef4444','#f97316'], borderRadius: 6 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { font: { family: 'Sarabun', size: 11 } }, grid: { color: '#f3f4f6' } }, x: { ticks: { font: { family: 'Sarabun', size: 10 } }, grid: { display: false } } } }
-      });
-    }
-  }, 100);
+function _arSetTab(tab) { _arTab = tab; buildAssetReportsPage(); }
+function _arUpdateFilter() {
+  _arFiscal = (document.getElementById('arFiscal')||{}).value||'';
+  _arAmphoe = (document.getElementById('arAmphoe')||{}).value||'all';
+  _arCat = (document.getElementById('arCat')||{}).value||'all';
+  _arStatus = (document.getElementById('arStatus')||{}).value||'all';
+  buildAssetReportsPage();
+}
+
+function _arBuildList(assets) {
+  var html = '<div class="card overflow-hidden" id="arPrintArea">';
+  html += _arPrintHeader('รายงานการตรวจสอบพัสดุประจำปีงบประมาณ พ.ศ. ' + (_arFiscal || '...'));
+  html += '<div class="overflow-x-auto">';
+  html += '<table class="w-full text-xs ar-table"><thead><tr>';
+  html += '<th>ลำดับ</th><th>วันที่ได้รับ/<br>จัดซื้อ</th><th>เลขที่สินทรัพย์/<br>เลขที่ใบ GFMIS</th>';
+  html += '<th>รหัสครุภัณฑ์</th><th>ประเภท</th><th>ชนิด</th><th>รายการ</th><th>ราคา/<br>หน่วย</th>';
+  html += '<th>วิธีการ<br>ได้มา</th><th>สถานที่<br>ใช้งาน</th><th>ผู้ใช้</th><th>สถานะ</th>';
+  html += '</tr></thead><tbody>';
+  if (!assets.length) html += '<tr><td colspan="12" class="text-center py-8 text-gray-400">ไม่พบข้อมูล</td></tr>';
+  assets.forEach(function(a, i) {
+    html += '<tr>';
+    html += '<td class="text-center">' + (i+1) + '</td>';
+    html += '<td>' + escHtml(a.receive_date||'-') + '</td>';
+    html += '<td>' + escHtml(a.asset_number||'') + '<br><span class="text-gray-500">' + escHtml(a.gfmis_number||'') + '</span></td>';
+    html += '<td>' + escHtml(a.asset_code||'') + '</td>';
+    html += '<td>' + escHtml(_getAssetCatName(a.category_id)) + '</td>';
+    html += '<td>' + escHtml(_getAssetTypeName(a.type_id)) + '</td>';
+    html += '<td>' + escHtml(a.description||'') + '</td>';
+    html += '<td class="text-right">' + _fmtMoney(a.unit_price) + '</td>';
+    html += '<td>' + escHtml(a.acquisition_method||'') + '</td>';
+    html += '<td>' + escHtml(a.location||'') + '</td>';
+    html += '<td>' + escHtml(a.created_by||'') + '</td>';
+    html += '<td>' + _assetStatusLabel(a.status) + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  html += _arPrintFooter();
+  html += '</div>';
+  return html;
+}
+
+function _arBuildSummary(assets) {
+  var html = '<div class="card overflow-hidden" id="arPrintArea">';
+  html += _arPrintHeader('สรุปรายงานการตรวจสอบพัสดุประจำปีงบประมาณ พ.ศ. ' + (_arFiscal || '...'));
+  html += '<div class="overflow-x-auto">';
+  html += '<table class="w-full text-xs ar-table"><thead><tr>';
+  html += '<th>ลำดับ</th><th>หน่วยนับ</th><th>จำนวนรายการ/<br>ชิ้น</th><th>ราคา</th><th>อัตราครุภัณฑ์</th><th>ส่งคืน/<br>จำหน่ายไปแล้ว</th><th>รวม</th>';
+  html += '</tr></thead><tbody>';
+
+  var grandTotal = 0, grandActive = 0, grandDisposed = 0;
+  var rows = [];
+  _arCats.forEach(function(c) {
+    var catAssets = assets.filter(function(a){ return a.category_id === c.id; });
+    if (!catAssets.length) return;
+    var count = catAssets.length;
+    var value = catAssets.reduce(function(s,a){ return s + (a.unit_price||0); }, 0);
+    var disposedCount = catAssets.filter(function(a){ return a.status === 'disposed'; }).length;
+    rows.push({ name: c.name, count: count, value: value, disposed: disposedCount });
+    grandTotal += count; grandActive += (count - disposedCount); grandDisposed += disposedCount;
+  });
+
+  if (!rows.length) html += '<tr><td colspan="7" class="text-center py-8 text-gray-400">ไม่พบข้อมูล</td></tr>';
+  rows.forEach(function(r, i) {
+    html += '<tr>';
+    html += '<td class="text-center">' + (i+1) + '</td>';
+    html += '<td>' + escHtml(r.name) + '</td>';
+    html += '<td class="text-right">' + r.count + '</td>';
+    html += '<td class="text-right">' + _fmtMoney(r.value) + '</td>';
+    html += '<td class="text-right">' + (r.count - r.disposed) + '</td>';
+    html += '<td class="text-right">' + r.disposed + '</td>';
+    html += '<td class="text-right font-semibold">' + r.count + '</td>';
+    html += '</tr>';
+  });
+  html += '<tr class="ar-total"><td colspan="2" class="text-center">รวมทั้งสิ้น</td>';
+  html += '<td class="text-right">' + grandTotal + '</td>';
+  html += '<td class="text-right">' + _fmtMoney(assets.reduce(function(s,a){ return s + (a.unit_price||0); }, 0)) + '</td>';
+  html += '<td class="text-right">' + grandActive + '</td>';
+  html += '<td class="text-right">' + grandDisposed + '</td>';
+  html += '<td class="text-right">' + grandTotal + '</td></tr>';
+  html += '</tbody></table></div>';
+  html += _arPrintFooter();
+  html += '</div>';
+  return html;
+}
+
+function _arBuildDisposed(assets) {
+  var disposed = assets.filter(function(a){ return a.status === 'disposed'; });
+  var html = '<div class="card overflow-hidden" id="arPrintArea">';
+  html += _arPrintHeader('สรุปครุภัณฑ์ที่จำหน่ายแล้ว ประจำปีงบประมาณ พ.ศ. ' + (_arFiscal || '...'));
+  html += '<div class="overflow-x-auto">';
+  html += '<table class="w-full text-xs ar-table"><thead><tr>';
+  html += '<th>ลำดับ</th><th>วันที่ได้รับ/<br>จัดซื้อ</th><th>รหัสครุภัณฑ์</th>';
+  html += '<th>รายการ</th><th>ราคา</th><th>หน่วยงาน</th><th>หมายเหตุ</th>';
+  html += '</tr></thead><tbody>';
+  if (!disposed.length) html += '<tr><td colspan="7" class="text-center py-8 text-gray-400">ไม่พบข้อมูล</td></tr>';
+  disposed.forEach(function(a, i) {
+    html += '<tr>';
+    html += '<td class="text-center">' + (i+1) + '</td>';
+    html += '<td>' + escHtml(a.receive_date||'-') + '</td>';
+    html += '<td>' + escHtml(a.asset_code||'') + '</td>';
+    html += '<td>' + escHtml(a.description||'') + '</td>';
+    html += '<td class="text-right">' + _fmtMoney(a.unit_price) + '</td>';
+    html += '<td>' + escHtml(_getAmphoeName(a.amphoe_id)) + '</td>';
+    html += '<td>' + escHtml(a.notes||'') + '</td>';
+    html += '</tr>';
+  });
+  html += '<tr class="ar-total"><td colspan="4" class="text-center">รวม</td>';
+  html += '<td class="text-right">' + _fmtMoney(disposed.reduce(function(s,a){ return s + (a.unit_price||0); }, 0)) + '</td>';
+  html += '<td colspan="2"></td></tr>';
+  html += '</tbody></table></div>';
+  html += _arPrintFooter();
+  html += '</div>';
+  return html;
+}
+
+function _arPrintHeader(title) {
+  var cfg = {};
+  try { cfg = JSON.parse(localStorage.getItem('sup_config') || '{}'); } catch(e) {}
+  var org = cfg.organization_name || 'สำนักงานพัฒนาชุมชน';
+  var html = '<div class="ar-print-header text-center py-4 border-b-2 border-gray-800 mb-4">';
+  html += '<h2 class="text-lg font-bold">' + escHtml(title) + '</h2>';
+  html += '<p class="text-sm">' + escHtml(org) + '</p>';
+  if (_arFiscal) html += '<p class="text-xs text-gray-600">ประจำปีงบประมาณ พ.ศ. ' + _arFiscal + '</p>';
+  html += '</div>';
+  return html;
+}
+
+function _arPrintFooter() {
+  if (!_arCommittee) return '';
+  var c = _arCommittee;
+  var html = '<div class="ar-print-footer mt-8 pt-4">';
+  html += '<div class="grid grid-cols-3 gap-4 text-center text-xs mt-8">';
+  html += '<div><p>(ลงชื่อ)................................................</p><p>ประธานกรรมการ</p><p>(' + escHtml(c.chairman_name||'') + ')</p><p>' + escHtml(c.chairman_position||'') + '</p></div>';
+  html += '<div><p>(ลงชื่อ)................................................</p><p>กรรมการ</p><p>(' + escHtml(c.member1_name||'') + ')</p><p>' + escHtml(c.member1_position||'') + '</p></div>';
+  html += '<div><p>(ลงชื่อ)................................................</p><p>กรรมการ</p><p>(' + escHtml(c.member2_name||'') + ')</p><p>' + escHtml(c.member2_position||'') + '</p></div>';
+  html += '</div></div>';
+  return html;
 }
 
 // ===== ON LOAD =====
