@@ -3448,20 +3448,19 @@ function _buildRegisterHTML(a, cat, type, amphoe, orgName, logoUrl, schedule, us
 
   var html = '';
 
-  // ── Header: title absolutely centered, org left, QR right ──
-  html += '<div style="position:relative;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;min-height:80px;">';
-  // Left: org info
-  html += '<div style="display:flex;align-items:center;gap:8px;max-width:35%;z-index:2;">';
-  if (logoUrl) html += '<img src="' + logoUrl + '" style="width:50px;height:50px;object-fit:contain;flex-shrink:0;">';
+  // ── Header: title on its own centered row, org+QR on row below ──
+  // Row 1: full-width centered title
+  html += '<div style="text-align:center;margin-bottom:6px;">';
+  html += '<div style="font-size:18px;font-weight:700;">ทะเบียนคุมสินทรัพย์รายตัว</div>';
+  html += '</div>';
+  // Row 2: org left, QR right
+  html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;">';
+  html += '<div style="display:flex;align-items:center;gap:8px;">';
+  if (logoUrl) html += '<img src="' + logoUrl + '" style="width:46px;height:46px;object-fit:contain;flex-shrink:0;">';
   html += '<div><div style="font-weight:700;font-size:13px;line-height:1.4;">' + escHtml(orgName) + '</div>';
   html += '<div style="font-size:11px;color:#555;">' + escHtml(amphoe ? amphoe.name : '') + '</div></div>';
   html += '</div>';
-  // Center: title (absolute centered)
-  html += '<div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;white-space:nowrap;z-index:1;">';
-  html += '<div style="font-size:18px;font-weight:700;">ทะเบียนคุมสินทรัพย์รายตัว</div>';
-  html += '</div>';
-  // Right: QR
-  html += '<div style="text-align:right;z-index:2;min-width:80px;">';
+  html += '<div style="text-align:right;">';
   if (qrDataUrl) {
     html += '<img src="' + qrDataUrl + '" style="width:80px;height:80px;display:inline-block;">';
     html += '<div style="font-size:9px;color:#888;margin-top:2px;">สแกนดูรายละเอียด</div>';
