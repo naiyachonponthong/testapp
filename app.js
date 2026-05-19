@@ -554,6 +554,10 @@ function renderDashboard() {
       html += '</div></div>';
     }
 
+    // ── วัสดุ KPI ──
+    html += '<div class="flex items-center justify-between mb-2">';
+    html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5"><i class="fi fi-rr-box-open-full text-blue-500"></i> วัสดุสิ้นเปลือง</p>';
+    html += '<button onclick="loadPage(\'stock\')" class="text-xs text-navy-600 hover:underline">ดูสต็อก →</button></div>';
     html += '<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">';
     var kpis = [
       { label:'รายการวัสดุ', value:kpi.total_items, icon:'fi-rr-box-open-full', color:'bg-blue-100', iconColor:'text-blue-600', danger:false },
@@ -562,6 +566,29 @@ function renderDashboard() {
       { label:'เคลื่อนไหววันนี้', value:kpi.today_tx, icon:'fi-rr-activity', color:'bg-green-100', iconColor:'text-green-600', danger:false }
     ];
     kpis.forEach(function(k) {
+      html += '<div class="card kpi-card p-4">';
+      html += '<div class="flex items-center justify-between mb-3">';
+      html += '<div class="w-11 h-11 ' + k.color + ' rounded-xl flex items-center justify-center"><i class="fi ' + k.icon + ' ' + k.iconColor + ' text-xl"></i></div>';
+      if (k.danger && k.value > 0) html += '<span class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-medium">!</span>';
+      html += '</div>';
+      html += '<p class="text-2xl font-bold text-gray-800">' + k.value + '</p>';
+      html += '<p class="text-xs text-gray-500 mt-0.5">' + k.label + '</p>';
+      html += '</div>';
+    });
+    html += '</div>';
+
+    // ── ครุภัณฑ์ KPI ──
+    html += '<div class="flex items-center justify-between mb-2 mt-1">';
+    html += '<p class="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5"><i class="fi fi-rr-box-alt text-amber-500"></i> ครุภัณฑ์</p>';
+    html += '<button onclick="loadPage(\'assets\')" class="text-xs text-navy-600 hover:underline">ดูทะเบียน →</button></div>';
+    html += '<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">';
+    var assetKpis = [
+      { label:'ครุภัณฑ์ทั้งหมด', value: kpi.asset_total||0, icon:'fi-rr-box-alt', color:'bg-amber-100', iconColor:'text-amber-600', danger:false },
+      { label:'กำลังใช้งาน', value: kpi.asset_active||0, icon:'fi-rr-check-circle', color:'bg-green-100', iconColor:'text-green-600', danger:false },
+      { label:'ชำรุด', value: kpi.asset_damaged||0, icon:'fi-rr-wrench', color:'bg-red-100', iconColor:'text-red-500', danger: (kpi.asset_damaged||0) > 0 },
+      { label:'จำหน่ายแล้ว', value: kpi.asset_disposed||0, icon:'fi-rr-trash', color:'bg-gray-100', iconColor:'text-gray-500', danger:false }
+    ];
+    assetKpis.forEach(function(k) {
       html += '<div class="card kpi-card p-4">';
       html += '<div class="flex items-center justify-between mb-3">';
       html += '<div class="w-11 h-11 ' + k.color + ' rounded-xl flex items-center justify-center"><i class="fi ' + k.icon + ' ' + k.iconColor + ' text-xl"></i></div>';

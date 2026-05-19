@@ -901,6 +901,7 @@ function getDashboardStats(token) {
     var items = getSheetData('Items').filter(function(i){ return i.active !== false; });
     var wds   = getSheetData('Withdrawals');
     var txs   = getSheetData('Transactions');
+    var assets = getSheetData('Assets');
     var today = new Date().toISOString().split('T')[0];
     var cfg   = getConfig();
     var threshold = cfg.low_stock_threshold || CONFIG.LOW_STOCK_DEFAULT;
@@ -949,13 +950,23 @@ function getDashboardStats(token) {
     var recentPending = wds.filter(function(w){ return w.status === 'pending'; })
       .sort(function(a,b){ return b.requested_at > a.requested_at ? 1 : -1; }).slice(0, 5);
 
+    // Asset KPIs
+    var assetTotal    = assets.length;
+    var assetActive   = assets.filter(function(a){ return a.status === 'active'; }).length;
+    var assetDamaged  = assets.filter(function(a){ return a.status === 'damaged'; }).length;
+    var assetDisposed = assets.filter(function(a){ return a.status === 'disposed'; }).length;
+
     return {
       success: true,
       kpi: {
         total_items: totalItems,
         low_stock: lowStockItems.length,
         pending: pendingWds.length,
-        today_tx: todayTxs.length
+        today_tx: todayTxs.length,
+        asset_total: assetTotal,
+        asset_active: assetActive,
+        asset_damaged: assetDamaged,
+        asset_disposed: assetDisposed
       },
       monthly: Object.values(monthlyData),
       top_items: topItems,
