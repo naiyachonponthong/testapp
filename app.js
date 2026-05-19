@@ -465,7 +465,7 @@ function performGlobalSearch() {
   matches.forEach(function(m) {
     var iconClass = m.type === 'asset' ? 'fi fi-rr-box-alt' : 'fi fi-rr-box-open-full';
     var label = m.type === 'asset' ? 'ครุภัณฑ์' : 'วัสดุ';
-    var imgHtml = m.image ? '<img src="' + imgUrl(m.image) + '" class="w-8 h-8 object-cover rounded-lg border border-gray-200">' : '<div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center"><i class="' + iconClass + ' text-gray-400 text-xs"></i></div>';
+    var imgHtml = m.image ? '<img src="' + imgUrl(m.image) + '" class="w-8 h-8 object-cover rounded-lg border border-gray-200" loading="lazy">' : '<div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center"><i class="' + iconClass + ' text-gray-400 text-xs"></i></div>';
     html += '<div class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0" onclick="globalSearchGoTo(\'' + m.id + '\',\'' + m.type + '\')">';
     html += imgHtml;
     html += '<div class="flex-1 min-w-0"><p class="text-sm font-medium text-gray-800 truncate">' + escHtml(m.name) + '</p>';
@@ -820,7 +820,7 @@ function buildItemsPage() {
     var sClass = getStockClass(item.current_stock, item.min_stock);
     var sLabel = getStockLabel(item.current_stock, item.min_stock);
     var imgUrlSrc = imgUrl(item.image_file_id);
-    var imgHtml = imgUrlSrc ? '<img src="' + imgUrlSrc + '" class="w-10 h-10 object-cover rounded-lg border border-gray-200">' : '<div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400"><i class="fi fi-rr-box-open-full text-sm"></i></div>';
+    var imgHtml = imgUrlSrc ? '<img src="' + imgUrlSrc + '" class="w-10 h-10 object-cover rounded-lg border border-gray-200" loading="lazy">' : '<div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400"><i class="fi fi-rr-box-open-full text-sm"></i></div>';
     html += '<tr>';
     html += '<td class="px-4 py-3 text-gray-400 text-xs">' + ((_itemsPage-1)*ITEMS_PER_PAGE + idx + 1) + '</td>';
     html += '<td class="px-4 py-3">' + imgHtml + '</td>';
@@ -847,7 +847,7 @@ function buildItemsPage() {
     var sClass = getStockClass(item.current_stock, item.min_stock);
     var sLabel = getStockLabel(item.current_stock, item.min_stock);
     var imgUrlSrc = imgUrl(item.image_file_id);
-    var imgHtml = imgUrlSrc ? '<img src="' + imgUrlSrc + '" class="w-14 h-14 object-cover rounded-xl border border-gray-200">' : '<div class="w-14 h-14 bg-gray-100 rounded-xl flex items-center justify-center"><i class="fi fi-rr-box-open-full text-gray-400 text-xl"></i></div>';
+    var imgHtml = imgUrlSrc ? '<img src="' + imgUrlSrc + '" class="w-14 h-14 object-cover rounded-xl border border-gray-200" loading="lazy">' : '<div class="w-14 h-14 bg-gray-100 rounded-xl flex items-center justify-center"><i class="fi fi-rr-box-open-full text-gray-400 text-xl"></i></div>';
     html += '<div class="card p-4 flex flex-col gap-3">';
     html += '<div class="flex items-start justify-between">';
     html += '<div>' + imgHtml + '</div>';
@@ -1137,7 +1137,7 @@ function showItemDetailModal(itemId) {
   var imgUrlSrc = imgUrl(item.image_file_id);
   var imgSection = '';
   if (imgUrlSrc) {
-    imgSection = '<div class="flex justify-center mb-4"><img src="' + imgUrlSrc + '" class="w-40 h-40 object-cover rounded-2xl border border-gray-200 shadow-sm"></div>';
+    imgSection = '<div class="flex justify-center mb-4"><img src="' + imgUrlSrc + '" class="w-40 h-40 object-cover rounded-2xl border border-gray-200 shadow-sm" loading="lazy"></div>';
   } else {
     imgSection = '<div class="flex justify-center mb-4"><div class="w-24 h-24 bg-gray-100 rounded-2xl flex items-center justify-center"><i class="fi fi-rr-box-open-full text-gray-300 text-4xl"></i></div></div>';
   }
@@ -1297,7 +1297,7 @@ function buildStockContent(data) {
       html += '<div class="card p-4 flex flex-col gap-3 hover:shadow-md transition-shadow">';
       html += '<div class="flex items-start justify-between">';
       var imgUrlSrc = imgUrl(item.image_file_id);
-      var cardImg = imgUrlSrc ? '<img src="' + imgUrlSrc + '" class="w-10 h-10 object-cover rounded-xl border border-gray-200">' : '<div class="w-10 h-10 bg-navy-100 rounded-xl flex items-center justify-center"><i class="fi fi-rr-box-open-full text-navy-700 text-lg"></i></div>';
+      var cardImg = imgUrlSrc ? '<img src="' + imgUrlSrc + '" class="w-10 h-10 object-cover rounded-xl border border-gray-200" loading="lazy">' : '<div class="w-10 h-10 bg-navy-100 rounded-xl flex items-center justify-center"><i class="fi fi-rr-box-open-full text-navy-700 text-lg"></i></div>';
       html += '<div>' + cardImg + '</div>';
       html += '<span class="px-2 py-0.5 rounded-full text-xs font-medium ' + sClass + '">' + sLabel + '</span></div>';
       html += '<div><p class="font-semibold text-gray-800 text-sm leading-snug">' + escHtml(item.name) + '</p>';
@@ -1813,7 +1813,7 @@ function buildWdItemList(data) {
   return data.map(function(i) {
     var sClass = getStockClass(i.current_stock, i.min_stock);
     var imgUrlSrc = imgUrl(i.image_file_id);
-    var imgHtml = imgUrlSrc ? '<img src="' + imgUrlSrc + '" class="w-9 h-9 object-cover rounded-xl border border-gray-200 flex-shrink-0">' : '<div class="w-9 h-9 bg-navy-100 rounded-xl flex items-center justify-center flex-shrink-0"><i class="fi fi-rr-box-open-full text-navy-700 text-sm"></i></div>';
+    var imgHtml = imgUrlSrc ? '<img src="' + imgUrlSrc + '" class="w-9 h-9 object-cover rounded-xl border border-gray-200 flex-shrink-0" loading="lazy">' : '<div class="w-9 h-9 bg-navy-100 rounded-xl flex items-center justify-center flex-shrink-0"><i class="fi fi-rr-box-open-full text-navy-700 text-sm"></i></div>';
     return '<div onclick="selectWdItem(\'' + i.id + '\')" class="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-navy-50 border border-transparent hover:border-navy-200 transition">'
       + imgHtml
       + '<div class="flex-1 min-w-0"><p class="text-sm font-medium text-gray-700 truncate">' + escHtml(i.name) + '</p>'
@@ -3188,7 +3188,7 @@ function openAssetForm(id) {
   body += '</select></div>';
   body += '<div><label class="form-label">รูปภาพ</label><input type="file" id="aImage" accept="image/*" onchange="_uploadAssetImage(this)" class="form-input py-1.5">';
   if (_assetImageFileId) {
-    body += '<div class="mt-2"><img src="' + imgUrl(_assetImageFileId) + '" class="h-24 rounded-xl border border-gray-200"></div>';
+    body += '<div class="mt-2"><img src="' + imgUrl(_assetImageFileId) + '" class="h-24 rounded-xl border border-gray-200" loading="lazy"></div>';
   }
   body += '</div>';
   body += '<div><label class="form-label">หมายเหตุ</label><textarea id="aNotes" class="form-input" rows="2">' + escHtml(a?a.notes:'') + '</textarea></div>';
