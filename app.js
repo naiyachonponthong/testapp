@@ -1506,37 +1506,58 @@ function submitStocktake() {
 
 // ===== PRINT QR LABELS =====
 var _printQRFilter = { search:'', category:'all' };
+var _printQRMode = 'item'; // 'item' | 'asset'
 function renderPrintQRLabels() {
   showLoading('โหลดข้อมูล...');
   var itemsPromise = (_itemsData.length > 0 && (Date.now() - _itemsCacheTime) < ITEMS_CACHE_TTL)
     ? Promise.resolve({ success: true, data: _itemsData })
     : callAPI('getItems', AUTH.token).then(function(res){ _itemsData = res.data||[]; _itemsCacheTime = Date.now(); return res; });
-  itemsPromise.then(function(res) {
+  var assetsPromise = (_assetsCache.length > 0)
+    ? Promise.resolve({ success: true, data: _assetsCache })
+    : callAPI('getAssets', AUTH.token).then(function(res){ _assetsCache = res.data||[]; return res; });
+  Promise.all([itemsPromise, assetsPromise]).then(function(results) {
     hideLoading();
-    _itemsData = res.data || [];
+    _itemsData = results[0].data || [];
+    _assetsCache = results[1].data || [];
     buildPrintQRPage();
   }).catch(function() { hideLoading(); showError('โหลดข้อมูลไม่สำเร็จ'); });
 }
 
 function buildPrintQRPage() {
-  var filtered = _itemsData.filter(function(i) {
-    if (i.active === false) return false;
-    if (_printQRFilter.search && !i.name.toLowerCase().includes(_printQRFilter.search.toLowerCase()) && !(i.item_code||'').toLowerCase().includes(_printQRFilter.search.toLowerCase())) return false;
-    if (_printQRFilter.category !== 'all' && i.category !== _printQRFilter.category) return false;
+  var isAsset = _printQRMode === 'asset';
+  var source = isAsset ? (_assetsCache || []) : (_itemsData || []);
+  var filtered = source.filter(function(i) {
+    if (!isAsset && i.active === false) return false;
+    if (_printQRFilter.search) {
+      var term = _printQRFilter.search.toLowerCase();
+      var name = (i.name || i.description || '').toLowerCase();
+      var code = (i.item_code || i.asset_code || '').toLowerCase();
+      if (!name.includes(term) && !code.includes(term)) return false;
+    }
+    if (!isAsset && _printQRFilter.category !== 'all' && i.category !== _printQRFilter.category) return false;
     return true;
   });
-  var cats = getCategoryList(_itemsData);
+  var cats = isAsset ? [] : getCategoryList(_itemsData);
 
   var html = '<div class="fade-in space-y-4">';
+  // Mode toggle
+  html += '<div class="flex gap-2 bg-gray-100 p-1 rounded-xl w-fit">';
+  html += '<button onclick="setPrintQRMode(\'item\')" class="px-4 py-1.5 text-sm rounded-lg font-medium transition ' + (!isAsset ? 'bg-white text-navy-700 shadow-sm' : 'text-gray-500 hover:text-gray-700') + '"><i class="fi fi-rr-box-open-full mr-1"></i>วัสดุ</button>';
+  html += '<button onclick="setPrintQRMode(\'asset\')" class="px-4 py-1.5 text-sm rounded-lg font-medium transition ' + (isAsset ? 'bg-white text-navy-700 shadow-sm' : 'text-gray-500 hover:text-gray-700') + '"><i class="fi fi-rr-box-alt mr-1"></i>ครุภัณฑ์</button>';
+  html += '</div>';
+
   // Toolbar
   html += '<div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">';
   html += '<div class="flex gap-2 flex-wrap">';
   html += '<div class="relative"><i class="fi fi-rr-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>';
-  html += '<input type="text" id="printQRSearch" placeholder="ค้นหาวัสดุ..." value="' + escHtml(_printQRFilter.search) + '" onkeyup="debouncePrintQRFilter()" class="pl-9 pr-4 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-navy-500 w-48"></div>';
-  html += '<select id="printQRCat" onchange="applyPrintQRFilter()" class="border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none">';
-  html += '<option value="all">ทุกหมวด</option>';
-  cats.forEach(function(c){ html += '<option value="' + escHtml(c) + '" ' + (_printQRFilter.category===c?'selected':'') + '>' + escHtml(c) + '</option>'; });
-  html += '</select></div>';
+  html += '<input type="text" id="printQRSearch" placeholder="ค้นหา' + (isAsset?'ครุภัณฑ์':'วัสดุ') + '..." value="' + escHtml(_printQRFilter.search) + '" onkeyup="debouncePrintQRFilter()" class="pl-9 pr-4 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-navy-500 w-48"></div>';
+  if (!isAsset) {
+    html += '<select id="printQRCat" onchange="applyPrintQRFilter()" class="border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none">';
+    html += '<option value="all">ทุกหมวด</option>';
+    cats.forEach(function(c){ html += '<option value="' + escHtml(c) + '" ' + (_printQRFilter.category===c?'selected':'') + '>' + escHtml(c) + '</option>'; });
+    html += '</select>';
+  }
+  html += '</div>';
   html += '<div class="flex gap-2">';
   html += '<button onclick="toggleSelectAllQR()" class="btn-secondary btn-sm"><i class="fi fi-rr-check mr-1"></i>เลือกทั้งหมด/ยกเลิก</button>';
   html += '<button onclick="printSelectedQRLabels()" class="btn-primary btn-sm"><i class="fi fi-rr-print mr-1"></i>พิมพ์ที่เลือก</button></div></div>';
@@ -1546,18 +1567,22 @@ function buildPrintQRPage() {
   html += '<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">';
   if (filtered.length === 0) html += '<p class="col-span-full text-center text-gray-400 py-10">ไม่พบรายการ</p>';
   filtered.forEach(function(item) {
-    var img = imgUrl(item.image_file_id);
-    var imgHtml = img ? '<img src="' + img + '" class="w-10 h-10 object-cover rounded-lg border border-gray-200">' : '<div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center"><i class="fi fi-rr-box-open-full text-gray-400 text-sm"></i></div>';
+    var img = isAsset ? '' : imgUrl(item.image_file_id);
+    var iconClass = isAsset ? 'fi fi-rr-box-alt' : 'fi fi-rr-box-open-full';
+    var imgHtml = img ? '<img src="' + img + '" class="w-10 h-10 object-cover rounded-lg border border-gray-200">' : '<div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center"><i class="' + iconClass + ' text-gray-400 text-sm"></i></div>';
+    var name = isAsset ? (item.description || item.asset_code) : item.name;
+    var code = isAsset ? item.asset_code : item.item_code;
     html += '<label class="card p-3 flex items-center gap-3 cursor-pointer hover:shadow-md transition-shadow" onclick="event.stopPropagation()">';
-    html += '<input type="checkbox" class="qr-print-check w-4 h-4 accent-navy-600 flex-shrink-0" data-id="' + item.id + '">';
+    html += '<input type="checkbox" class="qr-print-check w-4 h-4 accent-navy-600 flex-shrink-0" data-id="' + item.id + '" data-type="' + (isAsset?'asset':'item') + '">';
     html += imgHtml;
-    html += '<div class="min-w-0"><p class="text-sm font-medium text-gray-800 truncate">' + escHtml(item.name) + '</p>';
-    html += '<p class="text-xs text-gray-500">' + escHtml(item.item_code) + '</p></div>';
+    html += '<div class="min-w-0"><p class="text-sm font-medium text-gray-800 truncate">' + escHtml(name) + '</p>';
+    html += '<p class="text-xs text-gray-500">' + escHtml(code||'') + '</p></div>';
     html += '</label>';
   });
   html += '</div></div>';
   document.getElementById('mainContent').innerHTML = html;
 }
+function setPrintQRMode(mode) { _printQRMode = mode; buildPrintQRPage(); }
 
 var _printQRFilterTimer;
 function debouncePrintQRFilter() { clearTimeout(_printQRFilterTimer); _printQRFilterTimer = setTimeout(applyPrintQRFilter, 300); }
@@ -1576,8 +1601,10 @@ function printSelectedQRLabels() {
   var selected = [];
   document.querySelectorAll('.qr-print-check:checked').forEach(function(c) {
     var id = c.getAttribute('data-id');
-    var item = _itemsData.find(function(i){ return i.id === id; });
-    if (item) selected.push(item);
+    var type = c.getAttribute('data-type');
+    var source = type === 'asset' ? _assetsCache : _itemsData;
+    var item = source.find(function(i){ return i.id === id; });
+    if (item) selected.push({ data: item, type: type });
   });
   if (selected.length === 0) { showError('กรุณาเลือกอย่างน้อย 1 รายการ'); return; }
 
@@ -1592,20 +1619,29 @@ function printSelectedQRLabels() {
     '.qr-wrap{width:16mm;height:16mm}';
 
   var bodyHtml = '<div class="sheet">';
-  selected.forEach(function(item) {
-    var qrUrl = baseUrl + '?action=withdraw&item_id=' + item.id;
+  selected.forEach(function(s) {
+    var item = s.data;
+    var isAsset = s.type === 'asset';
+    var qrUrl = isAsset ? baseUrl + '?action=asset&id=' + item.id : baseUrl + '?action=withdraw&item_id=' + item.id;
+    var name = isAsset ? (item.description || item.asset_code) : item.name;
+    var code = isAsset ? item.asset_code : item.item_code;
+    var extra = isAsset ? '' : (item.size || '');
+    var uid = s.type + '_' + item.id;
     bodyHtml += '<div class="label">';
-    bodyHtml += '<p class="name">' + escHtml(item.name) + '</p>';
-    bodyHtml += '<p class="meta">' + escHtml(item.item_code) + (item.size ? ' • ' + escHtml(item.size) : '') + '</p>';
-    bodyHtml += '<div class="qr-wrap" id="qr_' + item.id + '"></div>';
+    bodyHtml += '<p class="name">' + escHtml(name) + '</p>';
+    bodyHtml += '<p class="meta">' + escHtml(code) + (extra ? ' • ' + escHtml(extra) : '') + '</p>';
+    bodyHtml += '<div class="qr-wrap" id="qr_' + uid + '"></div>';
     bodyHtml += '</div>';
   });
   bodyHtml += '</div>';
 
   var scriptHtml = '';
-  selected.forEach(function(item) {
-    var qrUrl = baseUrl + '?action=withdraw&item_id=' + item.id;
-    scriptHtml += 'new QRCode(document.getElementById("qr_' + item.id + '"),{text:"' + qrUrl + '",width:60,height:60,colorDark:"#1a2566",correctLevel:QRCode.CorrectLevel.M});';
+  selected.forEach(function(s) {
+    var item = s.data;
+    var isAsset = s.type === 'asset';
+    var qrUrl = isAsset ? baseUrl + '?action=asset&id=' + item.id : baseUrl + '?action=withdraw&item_id=' + item.id;
+    var uid = s.type + '_' + item.id;
+    scriptHtml += 'new QRCode(document.getElementById("qr_' + uid + '"),{text:"' + qrUrl + '",width:60,height:60,colorDark:"#1a2566",correctLevel:QRCode.CorrectLevel.M});';
   });
 
   win.document.write('<html><head><title>พิมพ์ QR สติ๊กเกอร์</title><link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">'
