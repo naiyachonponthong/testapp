@@ -3369,14 +3369,20 @@ function printAssetRegister(id) {
     }
 
     var qrUrl = baseUrl + '?public_asset_id=' + id;
-    var qrDataUrl = '';
     try {
-      var qrCanvas = document.createElement('canvas');
-      new QRCode(qrCanvas, { text: qrUrl, width: 120, height: 120, correctLevel: QRCode.CorrectLevel.H });
+      var qrDiv = document.createElement('div');
+      qrDiv.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
+      document.body.appendChild(qrDiv);
+      new QRCode(qrDiv, { text: qrUrl, width: 140, height: 140, correctLevel: QRCode.CorrectLevel.H });
       setTimeout(function(){
-        qrDataUrl = qrCanvas.toDataURL ? qrCanvas.toDataURL() : (qrCanvas.querySelector('img') ? qrCanvas.querySelector('img').src : '');
+        var qrDataUrl = '';
+        var canvas = qrDiv.querySelector('canvas');
+        var img = qrDiv.querySelector('img');
+        if (canvas && canvas.toDataURL) qrDataUrl = canvas.toDataURL('image/png');
+        else if (img && img.src) qrDataUrl = img.src;
+        document.body.removeChild(qrDiv);
         _openRegisterModal(a, cat, type, amphoe, orgName, logoUrl, schedule, usefulLife, depRate, price, annualDep, qrDataUrl, qrUrl);
-      }, 200);
+      }, 350);
     } catch(e) {
       _openRegisterModal(a, cat, type, amphoe, orgName, logoUrl, schedule, usefulLife, depRate, price, annualDep, '', qrUrl);
     }
@@ -3392,16 +3398,18 @@ function _openRegisterModal(a, cat, type, amphoe, orgName, logoUrl, schedule, us
   // Store for actual print
   window._lastRegisterPrintHTML = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ทะเบียนคุมสินทรัพย์รายตัว</title>' +
     '<style>' +
-    '@page{size:landscape;margin:12mm 15mm}' +
-    'body{font-family:sarabun,sans-serif;margin:0;padding:0;background:#fff;color:#000;font-size:11px;overflow:hidden}' +
-    '*{box-sizing:border-box;word-break:break-word;overflow-wrap:break-word}' +
-    'table{border-collapse:collapse;width:100%;table-layout:fixed}' +
-    'th,td{border:1px solid #999;padding:3px 4px;font-size:9px;word-break:break-word;overflow-wrap:break-word;vertical-align:top}' +
-    'th{background:#f3f4f6;text-align:center;font-weight:600}' +
-    'img{max-width:100%}' +
-    '@media print{.no-print{display:none}}' +
+    '@page{size:A4 landscape;margin:10mm 12mm}' +
+    'html,body{margin:0;padding:0;width:100%;max-width:100%;overflow-x:hidden}' +
+    'body{font-family:sarabun,sans-serif;background:#fff;color:#000;font-size:10px;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+    '*{box-sizing:border-box;word-break:break-word;overflow-wrap:break-word;max-width:100%}' +
+    '.print-wrap{width:100%;max-width:100%;padding:0;margin:0}' +
+    'table{border-collapse:collapse;width:100%;table-layout:fixed;max-width:100%}' +
+    'th,td{border:1px solid #999;padding:2px 3px;font-size:9px;word-break:break-word;overflow-wrap:break-word;vertical-align:top;overflow:hidden}' +
+    'th{background:#f3f4f6 !important;text-align:center;font-weight:600}' +
+    'img{max-width:100%;height:auto}' +
+    '@media print{.no-print{display:none}body{font-size:9px}}' +
     '</style>' +
-    '</head><body>' + inner + '</body></html>';
+    '</head><body><div class="print-wrap">' + inner + '</div></body></html>';
 
   // Build custom wide overlay
   var overlay = document.createElement('div');
@@ -3440,20 +3448,20 @@ function _buildRegisterHTML(a, cat, type, amphoe, orgName, logoUrl, schedule, us
 
   var html = '';
 
-  // ── Header: 3 columns: [org] | [title centered] | [QR] ──
-  html += '<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin-bottom:16px;gap:8px;">';
+  // ── Header: title absolutely centered, org left, QR right ──
+  html += '<div style="position:relative;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;min-height:80px;">';
   // Left: org info
-  html += '<div style="display:flex;align-items:center;gap:8px;">';
+  html += '<div style="display:flex;align-items:center;gap:8px;max-width:35%;z-index:2;">';
   if (logoUrl) html += '<img src="' + logoUrl + '" style="width:50px;height:50px;object-fit:contain;flex-shrink:0;">';
   html += '<div><div style="font-weight:700;font-size:13px;line-height:1.4;">' + escHtml(orgName) + '</div>';
   html += '<div style="font-size:11px;color:#555;">' + escHtml(amphoe ? amphoe.name : '') + '</div></div>';
   html += '</div>';
-  // Center: title
-  html += '<div style="text-align:center;white-space:nowrap;">';
+  // Center: title (absolute centered)
+  html += '<div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;white-space:nowrap;z-index:1;">';
   html += '<div style="font-size:18px;font-weight:700;">ทะเบียนคุมสินทรัพย์รายตัว</div>';
   html += '</div>';
   // Right: QR
-  html += '<div style="text-align:right;">';
+  html += '<div style="text-align:right;z-index:2;min-width:80px;">';
   if (qrDataUrl) {
     html += '<img src="' + qrDataUrl + '" style="width:80px;height:80px;display:inline-block;">';
     html += '<div style="font-size:9px;color:#888;margin-top:2px;">สแกนดูรายละเอียด</div>';
