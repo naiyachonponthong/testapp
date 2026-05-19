@@ -3278,10 +3278,20 @@ function renderPublicAssetPage() {
     html += _detailRow('วิธีการได้มา', a.acquisition_method||'-');
     html += '</div></div>';
 
+    // Responsible person / owner
+    html += '<div class="bg-white rounded-xl border border-gray-200 overflow-hidden mb-4">';
+    html += '<div class="px-4 py-3 border-b bg-gray-50 flex items-center gap-2"><i class="fi fi-rr-user text-navy-600 text-sm"></i><span class="text-sm font-semibold text-gray-700">ผู้ครอบครอง / ผู้รับผิดชอบ</span></div>';
+    html += '<div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">';
+    html += _detailRow('ผู้ใช้งาน / ผู้ครอบครอง', a.responsible_person || '-');
+    html += _detailRow('ตำแหน่ง / สถานที่ใช้งาน', a.installed_location || a.location || '-');
+    html += _detailRow('หน่วยงาน', amphoe ? amphoe.name : '-');
+    html += _detailRow('หมายเหตุ', a.notes || '-');
+    html += '</div></div>';
+
     // Vendor
     html += '<div class="bg-white rounded-xl border border-gray-200 overflow-hidden mb-4">';
     html += '<div class="px-4 py-3 border-b bg-gray-50 flex items-center gap-2"><i class="fi fi-rr-building text-navy-600 text-sm"></i><span class="text-sm font-semibold text-gray-700">ข้อมูลผู้มอบ / ผู้ขาย</span></div>';
-    html += '<div class="p-4 text-sm"><p class="font-medium text-gray-800">' + escHtml(a.vendor_name||'-') + '</p><p class="text-xs text-gray-500 mt-1">' + escHtml(a.vendor_address||'') + '</p></div>';
+    html += '<div class="p-4 text-sm"><p class="font-medium text-gray-800">' + escHtml(a.vendor_name || a.supplier_name || '-') + '</p><p class="text-xs text-gray-500 mt-1">' + escHtml(a.vendor_address||'') + '</p></div>';
     html += '</div>';
 
     // Depreciation summary
@@ -4167,7 +4177,7 @@ function buildAssetReportsPage() {
   html += '<option value="disposed"' + (_arStatus==='disposed'?' selected':'') + '>จำหน่ายแล้ว</option>';
   html += '</select></div>';
   html += '<div class="flex gap-2"><button onclick="_arUpdateFilter()" class="btn-primary btn-sm"><i class="fi fi-rr-search mr-1"></i>ค้นหา</button>';
-  html += '<button onclick="window.print()" class="btn-secondary btn-sm"><i class="fi fi-rr-print mr-1"></i>พิมพ์</button></div>';
+  html += '<button onclick="_arDoPrint()" class="btn-secondary btn-sm"><i class="fi fi-rr-print mr-1"></i>พิมพ์</button></div>';
   html += '</div>';
 
   if (_arTab === 'list') html += _arBuildList(assets);
@@ -4313,6 +4323,43 @@ function _arBuildDisposed(assets) {
   html += _arPrintFooter();
   html += '</div>';
   return html;
+}
+
+function _arDoPrint() {
+  var el = document.getElementById('arPrintArea');
+  if (!el) { showError('ไม่พบข้อมูลสำหรับพิมพ์'); return; }
+  var content = el.innerHTML;
+  var win = window.open('', '_blank');
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>รายงานการตรวจสอบพัสดุ</title>' +
+    '<style>' +
+    '@page{size:A4 landscape;margin:0}' +
+    'html,body{margin:0;padding:0}' +
+    'body{font-family:sarabun,sans-serif;font-size:10px;color:#000;background:#fff}' +
+    '.ar-wrap{padding:12mm 14mm}' +
+    '*{box-sizing:border-box;word-break:break-word;overflow-wrap:break-word}' +
+    'table{border-collapse:collapse;width:100%;table-layout:fixed}' +
+    'th,td{border:1px solid #999;padding:3px 4px;font-size:9px;vertical-align:top;word-break:break-word}' +
+    'th{background:#f3f4f6 !important;text-align:center;font-weight:600;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+    '.ar-print-header{text-align:center;padding-bottom:8px;border-bottom:2px solid #333;margin-bottom:10px}' +
+    '.ar-print-header h2{font-size:13px;font-weight:700;margin:4px 0}' +
+    '.ar-print-header p{font-size:10px;margin:2px 0}' +
+    '.ar-header-logo{width:40px;height:40px;object-fit:contain}' +
+    '.ar-print-footer{margin-top:20px}' +
+    '.ar-print-footer .grid{display:flex;justify-content:space-around}' +
+    '.ar-print-footer .grid>div{text-align:center;font-size:10px}' +
+    'canvas,img.ar-qr{width:60px !important;height:60px !important}' +
+    '@media print{.no-print{display:none}body{font-size:9px}}' +
+    '</style>' +
+    '<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>' +
+    '</head><body><div class="ar-wrap">' + content + '</div>' +
+    '<script>' +
+    'document.querySelectorAll("[data-qr-url]").forEach(function(el){' +
+    '  new QRCode(el,{text:el.getAttribute("data-qr-url"),width:60,height:60,correctLevel:1});' +
+    '});' +
+    'setTimeout(function(){window.print();},800);' +
+    '<\/script>' +
+    '</body></html>');
+  win.document.close();
 }
 
 function _arPrintHeader(title) {
