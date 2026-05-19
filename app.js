@@ -318,94 +318,114 @@ function initMenuSections() {
 }
 
 function renderManual() {
-  var html = '<div class="fade-in max-w-4xl mx-auto space-y-6">';
-  html += '<div class="card"><div class="card-header"><h3 class="font-semibold text-gray-700 text-sm flex items-center gap-2"><i class="fi fi-rr-book text-navy-600"></i> คู่มือการใช้งานระบบวัสดุสิ้นเปลือง</h3></div>';
-  html += '<div class="card-body space-y-6 text-sm text-gray-700">';
+  function mCard(num, icon, iconBg, title, items) {
+    var h = '<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">';
+    h += '<div class="flex items-center gap-3 px-5 py-4 border-b border-gray-100">';
+    h += '<div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ' + iconBg + '">';
+    h += '<i class="' + icon + ' text-white text-base"></i></div>';
+    h += '<div><span class="text-xs text-gray-400 font-medium">ขั้นตอนที่ ' + num + '</span>';
+    h += '<h4 class="text-sm font-bold text-gray-800 leading-tight">' + title + '</h4></div></div>';
+    h += '<ul class="px-5 py-4 space-y-2.5">';
+    items.forEach(function(item) {
+      h += '<li class="flex items-start gap-2.5 text-sm text-gray-600">';
+      h += '<span class="mt-1 w-1.5 h-1.5 rounded-full bg-navy-400 flex-shrink-0"></span>';
+      h += '<span>' + item + '</span></li>';
+    });
+    h += '</ul></div>';
+    return h;
+  }
 
-  // Section 1: Login
-  html += '<div><h4 class="font-bold text-navy-700 text-base mb-2">1. การเข้าสู่ระบบ</h4>';
-  html += '<ul class="list-disc list-inside space-y-1 ml-2">';
-  html += '<li>เลือกบทบาท: <b>ผู้ดูแลระบบ</b> / <b>เจ้าหน้าที่</b> / <b>พนักงาน</b></li>';
-  html += '<li>กรอกชื่อผู้ใช้งานและรหัสผ่าน</li>';
-  html += '<li>กดปุ่ม "เข้าสู่ระบบ"</li>';
-  html += '</ul></div>';
+  var sections = [
+    { num:1, icon:'fi fi-rr-sign-in', bg:'bg-blue-500', title:'การเข้าสู่ระบบ', items:[
+      'เลือกบทบาท: <b class="text-navy-700">ผู้ดูแลระบบ</b> / <b class="text-navy-700">เจ้าหน้าที่</b> / <b class="text-navy-700">พนักงาน</b>',
+      'กรอกชื่อผู้ใช้งานและรหัสผ่านที่ได้รับ',
+      'กดปุ่ม <b>"เข้าสู่ระบบ"</b> หากลืมรหัสผ่านให้กด "ลืมรหัสผ่าน"'
+    ]},
+    { num:2, icon:'fi fi-rr-home', bg:'bg-indigo-500', title:'ภาพรวมระบบ (Dashboard)', items:[
+      'ดูสรุปจำนวนวัสดุ สต็อกต่ำ/หมด รออนุมัติ และเคลื่อนไหววันนี้',
+      'กราฟสถิติรับ-เบิก ย้อนหลัง 6 เดือนล่าสุด',
+      'รายการวัสดุใกล้หมดสต็อกแบบ real-time'
+    ]},
+    { num:3, icon:'fi fi-rr-box-open-full', bg:'bg-cyan-500', title:'จัดการรายการวัสดุ', items:[
+      '<b>เพิ่มวัสดุ:</b> กรอกชื่อ รหัส หมวดหมู่ หน่วยนับ จำนวนขั้นต่ำ และราคา',
+      '<b>แก้ไข/ลบ:</b> คลิกไอคอนดินสอหรือถังขยะในตารางรายการ',
+      '<b>อัปโหลดรูปภาพ:</b> กด "เลือกรูป" ในฟอร์มเพิ่ม/แก้ไข',
+      '<b>พิมพ์ QR Code:</b> ไปที่เมนู "พิมพ์ QR สติ๊กเกอร์" เลือกวัสดุแล้วพิมพ์'
+    ]},
+    { num:4, icon:'fi fi-rr-layers', bg:'bg-teal-500', title:'สต็อกคงเหลือ', items:[
+      'ดูสต็อกรายการวัสดุทั้งหมดแบบภาพรวม',
+      'ตัวกรองตามหมวดหมู่และสถานะสต็อก',
+      'สีแสดงสถานะ: <b class="text-green-600">ปกติ</b> / <b class="text-amber-500">ใกล้หมด</b> / <b class="text-red-600">หมด</b>'
+    ]},
+    { num:5, icon:'fi fi-rr-inbox-in', bg:'bg-green-500', title:'รับวัสดุเข้าคลัง', items:[
+      'เลือกวัสดุที่ต้องการรับเข้า',
+      'กรอกจำนวนที่รับเข้า ระบุผู้รับและเลขที่เอกสาร',
+      'ระบบบันทึกประวัติและเพิ่มจำนวนสต็อกอัตโนมัติ'
+    ]},
+    { num:6, icon:'fi fi-rr-inbox-out', bg:'bg-orange-500', title:'เบิกวัสดุ', items:[
+      'ค้นหาวัสดุที่ต้องการ หรือสแกน QR Code บนสติ๊กเกอร์',
+      'กรอกจำนวนที่ต้องการเบิก เลือกผู้รับและหน่วยงาน',
+      'ส่งคำขอเบิก → รอผู้ดูแลระบบอนุมัติก่อนหักสต็อก'
+    ]},
+    { num:7, icon:'fi fi-rr-check-circle', bg:'bg-emerald-500', title:'อนุมัติการเบิก (เฉพาะผู้ดูแลระบบ)', items:[
+      'เข้าเมนู "อนุมัติการเบิก" เพื่อดูรายการที่รอดำเนินการ',
+      'กด ✓ เพื่ออนุมัติ หรือ ✗ เพื่อปฏิเสธพร้อมระบุเหตุผล',
+      'เมื่ออนุมัติ ระบบหักสต็อกและบันทึกประวัติอัตโนมัติ'
+    ]},
+    { num:8, icon:'fi fi-rr-box-alt', bg:'bg-amber-500', title:'ทะเบียนครุภัณฑ์', items:[
+      '<b>เพิ่มครุภัณฑ์:</b> กรอกรหัส ชื่อ ประเภท หน่วยงาน ราคา วันที่รับเข้า',
+      '<b>อัปเดตสถานภาพ:</b> เปลี่ยนสถานะเป็น ใช้งาน / ชำรุด / จำหน่าย',
+      '<b>ซ่อมบำรุง:</b> บันทึกประวัติการซ่อมและค่าใช้จ่ายแต่ละครั้ง',
+      '<b>ค่าเสื่อม:</b> ดูตารางค่าเสื่อมราคาคำนวณอัตโนมัติตามอายุใช้งาน',
+      '<b>ทะเบียนคุมฯ:</b> พิมพ์แบบฟอร์มรายตัวพร้อม QR Code'
+    ]},
+    { num:9, icon:'fi fi-rr-chart-histogram', bg:'bg-violet-500', title:'รายงาน', items:[
+      'รายงานการตรวจสอบพัสดุประจำปีงบประมาณ',
+      'รายงานการเบิก-รับ แยกตามหมวดหมู่และเดือน',
+      'รายงานครุภัณฑ์: ตามสถานะ / ตามหน่วยงาน',
+      'พิมพ์เป็น PDF หรือ export ไฟล์ Excel'
+    ]},
+    { num:10, icon:'fi fi-rr-settings', bg:'bg-slate-500', title:'ตั้งค่าระบบ', items:[
+      '<b>ข้อมูลองค์กร:</b> ชื่อระบบ โลโก้ ชื่อองค์กร ปีงบประมาณ',
+      '<b>จัดการผู้ใช้:</b> เพิ่ม/แก้ไข/ลบ ผู้ใช้งานและกำหนดสิทธิ์',
+      '<b>หมวดหมู่:</b> จัดการหมวดหมู่วัสดุและประเภทครุภัณฑ์'
+    ]},
+    { num:11, icon:'fi fi-rr-bulb', bg:'bg-yellow-500', title:'เคล็ดลับการใช้งาน', items:[
+      'ใช้ช่อง <b>"ค้นหาเร็ว"</b> บนแถบด้านบนเพื่อหาวัสดุหรือครุภัณฑ์ได้ทันที',
+      'สแกน QR Code บนสติ๊กเกอร์เพื่อเบิกวัสดุโดยตรง ไม่ต้องค้นหา',
+      'สแกน QR ครุภัณฑ์เพื่อดูรายละเอียดแบบสาธารณะได้ทันที',
+      'ข้อมูลสต็อกอัปเดต real-time ทุกครั้งที่มีการรับ/เบิก'
+    ]}
+  ];
 
-  // Section 2: Dashboard
-  html += '<div><h4 class="font-bold text-navy-700 text-base mb-2">2. ภาพรวมระบบ (Dashboard)</h4>';
-  html += '<ul class="list-disc list-inside space-y-1 ml-2">';
-  html += '<li>แสดงจำนวนรายการวัสดุ สต็อกต่ำ/หมด รออนุมัติ และเคลื่อนไหววันนี้</li>';
-  html += '<li>ดูกราฟสถิติรับ-เบิก 6 เดือนล่าสุด</li>';
-  html += '<li>ดูวัสดุใกล้หมดสต็อกแบบ real-time</li>';
-  html += '</ul></div>';
+  var html = '<div class="fade-in">';
 
-  // Section 3: Items
-  html += '<div><h4 class="font-bold text-navy-700 text-base mb-2">3. จัดการรายการวัสดุ</h4>';
-  html += '<ul class="list-disc list-inside space-y-1 ml-2">';
-  html += '<li><b>เพิ่มวัสดุ:</b> กรอกชื่อ รหัส หมวดหมู่ หน่วยนับ จำนวนขั้นต่ำ และราคา</li>';
-  html += '<li><b>แก้ไข/ลบ:</b> คลิกไอคอนดินสอหรือถังขยะในตาราง</li>';
-  html += '<li><b>อัปโหลดรูป:</b> กด "เลือกรูป" ในฟอร์มเพิ่ม/แก้ไข</li>';
-  html += '<li><b>QR Code:</b> กดปุ่ม QR เพื่อสแกนเบิกวัสดุ</li>';
-  html += '</ul></div>';
+  // Hero header
+  html += '<div class="bg-gradient-to-r from-navy-800 to-navy-600 rounded-2xl p-6 mb-6 text-white">';
+  html += '<div class="flex items-center gap-4">';
+  html += '<div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0"><i class="fi fi-rr-book text-white text-2xl"></i></div>';
+  html += '<div><h2 class="text-xl font-bold">คู่มือการใช้งาน</h2>';
+  html += '<p class="text-blue-200 text-sm mt-1">ระบบบริหารจัดการวัสดุสิ้นเปลืองและครุภัณฑ์</p></div></div>';
+  html += '<div class="grid grid-cols-3 gap-3 mt-5">';
+  html += '<div class="bg-white/10 rounded-xl p-3 text-center"><div class="text-lg font-bold">11</div><div class="text-xs text-blue-200">หัวข้อ</div></div>';
+  html += '<div class="bg-white/10 rounded-xl p-3 text-center"><div class="text-lg font-bold">3</div><div class="text-xs text-blue-200">บทบาทผู้ใช้</div></div>';
+  html += '<div class="bg-white/10 rounded-xl p-3 text-center"><div class="text-lg font-bold">QR</div><div class="text-xs text-blue-200">สแกนได้ทันที</div></div>';
+  html += '</div></div>';
 
-  // Section 4: Stock & Receive
-  html += '<div><h4 class="font-bold text-navy-700 text-base mb-2">4. รับวัสดุเข้าคลัง</h4>';
-  html += '<ul class="list-disc list-inside space-y-1 ml-2">';
-  html += '<li>เลือกวัสดุ → กรอกจำนวนรับเข้า → ระบุผู้รับ/เลขที่เอกสาร</li>';
-  html += '<li>ระบบจะบันทึกประวัติและเพิ่มจำนวนสต็อกอัตโนมัติ</li>';
-  html += '</ul></div>';
+  // Roles info bar
+  html += '<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">';
+  html += '<div class="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex items-center gap-3"><i class="fi fi-rr-shield-check text-blue-600 text-lg"></i><div><p class="text-xs font-bold text-blue-700">ผู้ดูแลระบบ</p><p class="text-xs text-blue-500">เข้าถึงได้ทุกเมนู อนุมัติ จัดการผู้ใช้</p></div></div>';
+  html += '<div class="bg-green-50 border border-green-100 rounded-xl px-4 py-3 flex items-center gap-3"><i class="fi fi-rr-user-gear text-green-600 text-lg"></i><div><p class="text-xs font-bold text-green-700">เจ้าหน้าที่</p><p class="text-xs text-green-500">รับ-เบิกวัสดุ ดูรายงาน จัดการครุภัณฑ์</p></div></div>';
+  html += '<div class="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 flex items-center gap-3"><i class="fi fi-rr-user text-amber-600 text-lg"></i><div><p class="text-xs font-bold text-amber-700">พนักงาน</p><p class="text-xs text-amber-500">เบิกวัสดุ ดูสต็อกคงเหลือ</p></div></div>';
+  html += '</div>';
 
-  // Section 5: Withdraw
-  html += '<div><h4 class="font-bold text-navy-700 text-base mb-2">5. เบิกวัสดุ</h4>';
-  html += '<ul class="list-disc list-inside space-y-1 ml-2">';
-  html += '<li>ค้นหาวัสดุ → กรอกจำนวนที่ต้องการเบิก</li>';
-  html += '<li>เลือกผู้รับ / ระบุหน่วยงาน</li>';
-  html += '<li>ส่งคำขอเบิก → รอผู้ดูแลระบบอนุมัติ</li>';
-  html += '</ul></div>';
+  // Cards grid
+  html += '<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">';
+  sections.forEach(function(s) {
+    html += mCard(s.num, s.icon, s.bg, s.title, s.items);
+  });
+  html += '</div></div>';
 
-  // Section 6: Approve
-  html += '<div><h4 class="font-bold text-navy-700 text-base mb-2">6. อนุมัติการเบิก (เฉพาะผู้ดูแลระบบ)</h4>';
-  html += '<ul class="list-disc list-inside space-y-1 ml-2">';
-  html += '<li>เข้าเมนู "อนุมัติการเบิก" เพื่อดูรายการรออนุมัติ</li>';
-  html += '<li>กด <span class="text-green-600 font-bold">\u2713</span> เพื่ออนุมัติ หรือ <span class="text-red-600 font-bold">\u2717</span> เพื่อปฏิเสธ</li>';
-  html += '<li>ระบบจะหักจำนวนสต็อกอัตโนมัติเมื่ออนุมัติ</li>';
-  html += '</ul></div>';
-
-  // Section 7: Assets
-  html += '<div><h4 class="font-bold text-navy-700 text-base mb-2">7. ทะเบียนครุภัณฑ์</h4>';
-  html += '<ul class="list-disc list-inside space-y-1 ml-2">';
-  html += '<li><b>เพิ่มครุภัณฑ์:</b> กรอกรหัส ชื่อ ประเภท หน่วยงาน ราคา วันที่รับ</li>';
-  html += '<li><b>อัปเดตสถานภาพ:</b> เปลี่ยนสถานะเป็น ใช้งาน/ชำรุด/จำหน่าย</li>';
-  html += '<li><b>ซ่อมบำรุง:</b> บันทึกประวัติการซ่อมและค่าใช้จ่าย</li>';
-  html += '<li><b>ค่าเสื่อม:</b> ดูตารางค่าเสื่อมราคาแบบอัตโนมัติ</li>';
-  html += '<li><b>ทะเบียนคุมฯ:</b> พิมพ์แบบฟอร์มทะเบียนคุมสินทรัพย์รายตัวพร้อม QR</li>';
-  html += '</ul></div>';
-
-  // Section 8: Reports
-  html += '<div><h4 class="font-bold text-navy-700 text-base mb-2">8. รายงาน</h4>';
-  html += '<ul class="list-disc list-inside space-y-1 ml-2">';
-  html += '<li>รายงานการตรวจสอบพัสดุประจำปีงบประมาณ</li>';
-  html += '<li>รายงานการเบิก-รับ แยกตามหมวดหมู่/เดือน</li>';
-  html += '<li>สามารถพิมพ์เป็น PDF หรือ Excel ได้</li>';
-  html += '</ul></div>';
-
-  // Section 9: Settings
-  html += '<div><h4 class="font-bold text-navy-700 text-base mb-2">9. ตั้งค่าระบบ</h4>';
-  html += '<ul class="list-disc list-inside space-y-1 ml-2">';
-  html += '<li><b>ข้อมูลองค์กร:</b> ชื่อระบบ โลโก้ ชื่อองค์กร</li>';
-  html += '<li><b>ผู้ใช้งาน:</b> เพิ่ม/แก้ไข/ลบ ผู้ใช้และสิทธิ์</li>';
-  html += '<li><b>หมวดหมู่:</b> จัดการหมวดหมู่วัสดุและครุภัณฑ์</li>';
-  html += '</ul></div>';
-
-  // Section 10: Tips
-  html += '<div><h4 class="font-bold text-navy-700 text-base mb-2">10. เคล็ดลับการใช้งาน</h4>';
-  html += '<ul class="list-disc list-inside space-y-1 ml-2">';
-  html += '<li>ใช้ช่อง "ค้นหาเร็ว" บนแถบด้านบนเพื่อหาวัสดุหรือครุภัณฑ์ทันที</li>';
-  html += '<li>สแกน QR Code บนวัสดุเพื่อเบิกได้โดยไม่ต้องค้นหา</li>';
-  html += '<li>ข้อมูลสต็อกอัปเดต real-time ทุกครั้งที่มีการรับ/เบิก</li>';
-  html += '<li>รหัสผ่านสามารถขอรีเซ็ตผ่าน "ลืมรหัสผ่าน" บนหน้า Login</li>';
-  html += '</ul></div>';
-
-  html += '</div></div></div>';
   document.getElementById('mainContent').innerHTML = html;
 }
 
