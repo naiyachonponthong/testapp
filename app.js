@@ -3391,9 +3391,16 @@ function _openRegisterModal(a, cat, type, amphoe, orgName, logoUrl, schedule, us
 
   // Store for actual print
   window._lastRegisterPrintHTML = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ทะเบียนคุมสินทรัพย์รายตัว</title>' +
-    '<style>@page{size:landscape;margin:15mm} body{font-family:sarabun,sans-serif;margin:0;padding:0;background:#fff;color:#000;font-size:11px}' +
-    'table{border-collapse:collapse;width:100%} th,td{border:1px solid #333;padding:3px 5px;font-size:10px}' +
-    'th{background:#f3f4f6;text-align:center;font-weight:600} @media print{.no-print{display:none}}</style>' +
+    '<style>' +
+    '@page{size:landscape;margin:12mm 15mm}' +
+    'body{font-family:sarabun,sans-serif;margin:0;padding:0;background:#fff;color:#000;font-size:11px;overflow:hidden}' +
+    '*{box-sizing:border-box;word-break:break-word;overflow-wrap:break-word}' +
+    'table{border-collapse:collapse;width:100%;table-layout:fixed}' +
+    'th,td{border:1px solid #999;padding:3px 4px;font-size:9px;word-break:break-word;overflow-wrap:break-word;vertical-align:top}' +
+    'th{background:#f3f4f6;text-align:center;font-weight:600}' +
+    'img{max-width:100%}' +
+    '@media print{.no-print{display:none}}' +
+    '</style>' +
     '</head><body>' + inner + '</body></html>';
 
   // Build custom wide overlay
@@ -3423,94 +3430,120 @@ function _openRegisterModal(a, cat, type, amphoe, orgName, logoUrl, schedule, us
 
 function _buildRegisterHTML(a, cat, type, amphoe, orgName, logoUrl, schedule, usefulLife, depRate, price, qrDataUrl) {
   var F = function(n){ return Number(n||0).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}); };
-
-  var html = '';
-
-  // Header: logo | title | QR
-  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">';
-  html += '<div style="display:flex;align-items:center;gap:10px;">';
-  if (logoUrl) html += '<img src="' + logoUrl + '" style="width:52px;height:52px;object-fit:contain;">';
-  html += '<div><div style="font-weight:700;font-size:13px;">' + escHtml(orgName) + '</div><div style="font-size:11px;color:#555;">' + escHtml(amphoe ? amphoe.name : '') + '</div></div>';
-  html += '</div>';
-  html += '<div style="text-align:center;"><div style="font-size:17px;font-weight:700;">ทะเบียนคุมสินทรัพย์รายตัว</div></div>';
-  html += '<div style="text-align:center;">';
-  if (qrDataUrl) {
-    html += '<img src="' + qrDataUrl + '" style="width:80px;height:80px;display:block;">';
-    html += '<div style="font-size:9px;color:#888;margin-top:2px;">สแกนดูรายละเอียด</div>';
-  }
-  html += '</div>';
-  html += '</div>';
-
-  // Info table
-  var td = function(label, value, colspan, width) {
-    return '<td' + (colspan?' colspan="'+colspan+'"':'') + (width?' style="width:'+width+';border:1px solid #ccc;padding:5px 7px;vertical-align:top;"':' style="border:1px solid #ccc;padding:5px 7px;vertical-align:top;"') + '>'
+  var TDSTYLE = 'border:1px solid #999;padding:5px 7px;vertical-align:top;word-break:break-word;';
+  var td = function(label, value, colspan) {
+    return '<td' + (colspan ? ' colspan="'+colspan+'"' : '') + ' style="' + TDSTYLE + '">'
       + '<div style="font-size:9px;color:#666;margin-bottom:2px;">' + label + '</div>'
       + '<div style="font-weight:600;font-size:11px;">' + escHtml(String(value||'-')) + '</div>'
       + '</td>';
   };
 
-  html += '<table style="width:100%;border-collapse:collapse;margin-bottom:4px;"><tbody>';
+  var html = '';
+
+  // ── Header: 3 columns: [org] | [title centered] | [QR] ──
+  html += '<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin-bottom:16px;gap:8px;">';
+  // Left: org info
+  html += '<div style="display:flex;align-items:center;gap:8px;">';
+  if (logoUrl) html += '<img src="' + logoUrl + '" style="width:50px;height:50px;object-fit:contain;flex-shrink:0;">';
+  html += '<div><div style="font-weight:700;font-size:13px;line-height:1.4;">' + escHtml(orgName) + '</div>';
+  html += '<div style="font-size:11px;color:#555;">' + escHtml(amphoe ? amphoe.name : '') + '</div></div>';
+  html += '</div>';
+  // Center: title
+  html += '<div style="text-align:center;white-space:nowrap;">';
+  html += '<div style="font-size:18px;font-weight:700;">ทะเบียนคุมสินทรัพย์รายตัว</div>';
+  html += '</div>';
+  // Right: QR
+  html += '<div style="text-align:right;">';
+  if (qrDataUrl) {
+    html += '<img src="' + qrDataUrl + '" style="width:80px;height:80px;display:inline-block;">';
+    html += '<div style="font-size:9px;color:#888;margin-top:2px;">สแกนดูรายละเอียด</div>';
+  }
+  html += '</div>';
+  html += '</div>';
+
+  // ── Info table: 5 columns, 3 rows ──
+  // Row 1: 5 cells
+  // Row 2: 4 cells → last one colspan=2 to fill 5
+  // Row 3: วิธีได้มา | ผู้ขาย(colspan=2) | หมายเหตุ(colspan=2)
+  html += '<table style="width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:4px;"><colgroup>';
+  html += '<col style="width:22%"><col style="width:16%"><col style="width:18%"><col style="width:22%"><col style="width:22%">';
+  html += '</colgroup><tbody>';
+
+  // Row 1
   html += '<tr>';
-  html += td('ประเภทครุภัณฑ์', (cat?cat.name:'') + (type?' / '+type.name:''), null, '22%');
-  html += td('รหัสสินทรัพย์', a.asset_code, null, '16%');
-  html += td('หมายเลข S/N', a.serial_number, null, '18%');
-  html += td('เลขที่ GFMIS', a.gfmis_number, null, '14%');
-  html += td('เลขทะเบียน', a.asset_number, null, '14%');
-  html += '</tr><tr>';
-  html += td('ลักษณะ/ชื่อ/รุ่น', a.description + (a.brand_model ? ' ' + a.brand_model : ''));
+  html += td('ประเภทครุภัณฑ์', (cat?cat.name:'') + (type?' / '+type.name:''));
+  html += td('รหัสสินทรัพย์', a.asset_code);
+  html += td('หมายเลข S/N', a.serial_number);
+  html += td('เลขที่ GFMIS', a.gfmis_number);
+  html += td('เลขทะเบียน', a.asset_number);
+  html += '</tr>';
+
+  // Row 2: ลักษณะ/ชื่อ/รุ่น | สถานภาพ | เครื่องประจำตำแหน่ง(colspan=2) | หน่วยงาน
+  html += '<tr>';
+  html += td('ลักษณะ/ชื่อ/รุ่น', a.description + (a.brand_model ? ' '+a.brand_model : ''));
   html += td('สถานภาพ', a.status === 'active' ? 'กำลังใช้งาน' : a.status === 'damaged' ? 'ชำรุด' : 'จำหน่ายแล้ว');
-  html += td('เครื่องประจำตำแหน่ง', a.installed_location || (amphoe ? 'ส่วนราชการ ' + amphoe.name : '-'));
+  html += td('เครื่องประจำตำแหน่ง', a.installed_location || (amphoe ? 'ส่วนราชการ '+amphoe.name : '-'), 2);
   html += td('หน่วยงาน', amphoe ? amphoe.name : '-');
-  html += '</tr><tr>';
+  html += '</tr>';
+
+  // Row 3: วิธีได้มา | ผู้ขาย/ผู้บริจาค(colspan=2) | หมายเหตุ(colspan=2)
+  html += '<tr>';
   html += td('วิธีการได้มา', a.acquisition_method);
   html += td('ผู้ขาย/ผู้บริจาค', a.supplier_name || '-', 2);
-  html += td('หมายเหตุ', a.notes || '-', null, '20%');
+  html += td('หมายเหตุ', a.notes || '-', 2);
   html += '</tr>';
+
   html += '</tbody></table>';
 
-  // Depreciation table
+  // ── Depreciation table ──
   html += '<div style="font-size:12px;font-weight:700;margin:14px 0 6px;">ตารางค่าเสื่อมราคา</div>';
-  html += '<table style="width:100%;border-collapse:collapse;font-size:10px;"><thead>';
-  html += '<tr style="background:#f3f4f6;">';
-  ['ลำดับ','วัน/เดือน/ปี\n(รับเข้า)','ปีงบ\nประมาณ','รายการ','จำนวน\n(หน่วย)','ราคาต่อ\nหน่วย','มูลค่ารวม','อายุใช้\nงาน(ปี)','อัตรา\nค่าเสื่อม%','ค่าเสื่อม\nประจำปี','ค่าเสื่อม\nสะสม','มูลค่า\nสุทธิ','หมายเหตุ'].forEach(function(h){
-    html += '<th style="border:1px solid #ccc;padding:4px 5px;text-align:center;white-space:pre-line;">' + h + '</th>';
+  var THSTYLE = 'border:1px solid #999;padding:4px 3px;background:#f3f4f6;text-align:center;font-weight:600;white-space:pre-line;font-size:9px;';
+  var TDNUM = 'border:1px solid #999;padding:3px 4px;font-size:10px;';
+  html += '<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:10px;"><colgroup>';
+  // 13 columns widths (%)
+  [4,8,6,14,6,8,8,5,6,8,8,8,5].forEach(function(w){ html += '<col style="width:'+w+'%">'; });
+  html += '</colgroup><thead><tr>';
+  ['ลำดับ','วัน/เดือน/ปี\n(รับเข้า)','ปีงบ\nประมาณ','รายการ','จำนวน\n(หน่วย)','ราคาต่อ\nหน่วย','มูลค่า\nรวม','อายุใช้\nงาน(ปี)','อัตรา\nค่าเสื่อม%','ค่าเสื่อม\nประจำปี','ค่าเสื่อม\nสะสม','มูลค่า\nสุทธิ','หมาย\nเหตุ'].forEach(function(h){
+    html += '<th style="' + THSTYLE + '">' + h + '</th>';
   });
   html += '</tr></thead><tbody>';
   if (schedule.length) {
     schedule.forEach(function(row, i) {
-      html += '<tr' + (i%2===1?' style="background:#f9fafb;"':'') + '>';
-      html += '<td style="border:1px solid #ccc;padding:4px 5px;text-align:center;">' + (i+1) + '</td>';
-      html += '<td style="border:1px solid #ccc;padding:4px 5px;text-align:center;">' + escHtml(formatDate(a.receive_date)||'-') + '</td>';
-      html += '<td style="border:1px solid #ccc;padding:4px 5px;text-align:center;">' + escHtml(String(a.fiscal_year||'-')) + '</td>';
-      html += '<td style="border:1px solid #ccc;padding:4px 5px;">' + escHtml(a.description||'') + '</td>';
-      html += '<td style="border:1px solid #ccc;padding:4px 5px;text-align:center;">1 เครื่อง</td>';
-      html += '<td style="border:1px solid #ccc;padding:4px 5px;text-align:right;">' + F(price) + '</td>';
-      html += '<td style="border:1px solid #ccc;padding:4px 5px;text-align:right;">' + F(price) + '</td>';
-      html += '<td style="border:1px solid #ccc;padding:4px 5px;text-align:center;">' + usefulLife + '</td>';
-      html += '<td style="border:1px solid #ccc;padding:4px 5px;text-align:center;">' + (depRate ? depRate.toFixed(2)+'%' : '-') + '</td>';
-      html += '<td style="border:1px solid #ccc;padding:4px 5px;text-align:right;">' + F(row.depreciation) + '</td>';
-      html += '<td style="border:1px solid #ccc;padding:4px 5px;text-align:right;">' + F(row.accumulated) + '</td>';
-      html += '<td style="border:1px solid #ccc;padding:4px 5px;text-align:right;">' + F(row.bookValue) + '</td>';
-      html += '<td style="border:1px solid #ccc;padding:4px 5px;"></td>';
+      var bg = i%2===1 ? 'background:#f9fafb;' : '';
+      html += '<tr style="' + bg + '">';
+      html += '<td style="' + TDNUM + 'text-align:center;">' + (i+1) + '</td>';
+      html += '<td style="' + TDNUM + 'text-align:center;">' + escHtml(formatDate(a.receive_date)||'-') + '</td>';
+      html += '<td style="' + TDNUM + 'text-align:center;">' + escHtml(String(a.fiscal_year||'-')) + '</td>';
+      html += '<td style="' + TDNUM + 'word-break:break-word;">' + escHtml(a.description||'') + '</td>';
+      html += '<td style="' + TDNUM + 'text-align:center;">1</td>';
+      html += '<td style="' + TDNUM + 'text-align:right;">' + F(price) + '</td>';
+      html += '<td style="' + TDNUM + 'text-align:right;">' + F(price) + '</td>';
+      html += '<td style="' + TDNUM + 'text-align:center;">' + usefulLife + '</td>';
+      html += '<td style="' + TDNUM + 'text-align:center;">' + (depRate ? depRate.toFixed(2)+'%' : '-') + '</td>';
+      html += '<td style="' + TDNUM + 'text-align:right;">' + F(row.depreciation) + '</td>';
+      html += '<td style="' + TDNUM + 'text-align:right;">' + F(row.accumulated) + '</td>';
+      html += '<td style="' + TDNUM + 'text-align:right;">' + F(row.bookValue) + '</td>';
+      html += '<td style="' + TDNUM + '"></td>';
       html += '</tr>';
     });
   } else {
-    html += '<tr><td colspan="13" style="border:1px solid #ccc;padding:8px;text-align:center;color:#999;">ไม่มีข้อมูลค่าเสื่อมราคา</td></tr>';
+    html += '<tr><td colspan="13" style="' + TDNUM + 'text-align:center;color:#999;padding:8px;">ไม่มีข้อมูลค่าเสื่อมราคา</td></tr>';
   }
   html += '</tbody></table>';
 
-  // Signatures
-  html += '<div style="margin-top:36px;display:flex;justify-content:space-around;font-size:11px;">';
+  // ── Signatures ──
+  html += '<div style="margin-top:40px;display:flex;justify-content:space-around;font-size:11px;">';
   ['ผู้ตรวจสอบ','ผู้รับผิดชอบสินทรัพย์','เจ้าหน้าที่พัสดุ'].forEach(function(sig){
-    html += '<div style="text-align:center;min-width:160px;">';
-    html += '<div style="border-top:1px solid #333;padding-top:6px;margin-top:48px;">(' + '&nbsp;'.repeat(24) + ')</div>';
+    html += '<div style="text-align:center;min-width:140px;">';
+    html += '<div style="height:44px;"></div>';
+    html += '<div style="border-top:1px solid #333;padding-top:6px;">(................................)</div>';
     html += '<div style="font-weight:600;margin-top:4px;">' + sig + '</div>';
-    html += '<div style="color:#777;margin-top:4px;">วันที่ &nbsp;...../...../......</div>';
+    html += '<div style="color:#777;margin-top:4px;">วันที่ ....../....../......</div>';
     html += '</div>';
   });
   html += '</div>';
 
-  html += '<div style="text-align:center;font-size:9px;color:#999;margin-top:16px;">กลังบริหารจัดการสินทรัพย์ | สำนักงานพัฒนาชุมชน</div>';
+  html += '<div style="text-align:center;font-size:9px;color:#aaa;margin-top:16px;">กลังบริหารจัดการสินทรัพย์ | สำนักงานพัฒนาชุมชน</div>';
   return html;
 }
 
