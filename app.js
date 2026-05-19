@@ -3198,12 +3198,19 @@ function printAssetQR(id) {
 
 // ===== PUBLIC ASSET DETAIL (NO LOGIN) =====
 function renderPublicAssetPage() {
-  document.getElementById('loginPage').classList.add('hidden');
-  document.getElementById('mainShell').classList.remove('hidden');
-  document.getElementById('sidebar').style.display = 'none';
-  document.getElementById('topbar').style.display = 'none';
-  document.getElementById('mainContent').classList.remove('lg:ml-64');
-  document.getElementById('mainContent').style.marginLeft = '0';
+  var _h = function(id){ var el=document.getElementById(id); if(el) el.classList.add('hidden'); };
+  var _s = function(id,prop,val){ var el=document.getElementById(id); if(el) el.style[prop]=val; };
+  var _rc = function(id,cls){ var el=document.getElementById(id); if(el) el.classList.remove(cls); };
+  _h('loginPage');
+  _rc('mainShell','hidden');
+  _s('sidebar','display','none');
+  // hide topbar if it has an id, otherwise hide by tag inside mainShell
+  (function(){
+    var tb = document.querySelector('#mainShell header') || document.querySelector('#mainShell nav') || document.getElementById('topbar');
+    if (tb) tb.style.display = 'none';
+  })();
+  var mc = document.getElementById('mainContent');
+  if (mc) { mc.classList.remove('lg:ml-64'); mc.style.marginLeft = '0'; }
 
   showLoading('กำลังโหลดข้อมูล...');
   Promise.all([
