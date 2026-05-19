@@ -3348,7 +3348,8 @@ function printAssetRegister(id) {
     var cat = cats.find(function(c){ return c.id === a.category_id; });
     var type = types.find(function(t){ return t.id === a.type_id; });
     var amphoe = amphoes.find(function(am){ return am.id === a.amphoe_id; });
-    var orgName = cfg.organization_name || '';
+    var orgName = cfg.organization_name || 'สำนักงานพัฒนาชุมชนจังหวัด';
+    var amphoeShort = amphoe ? amphoe.name : '';
     var logoUrl = cfg.app_logo ? imgUrl(cfg.app_logo) : '';
 
     var usefulLife = type && type.useful_life ? parseInt(type.useful_life) : 0;
@@ -3371,94 +3372,151 @@ function printAssetRegister(id) {
     var qrDataUrl = '';
     try {
       var qrCanvas = document.createElement('canvas');
-      new QRCode(qrCanvas, { text: qrUrl, width: 100, height: 100, correctLevel: QRCode.CorrectLevel.H });
-      qrDataUrl = qrCanvas.toDataURL();
-    } catch(e) {}
-
-    // Build preview body (same content as print form)
-    var body = '<div style="max-height:70vh;overflow:auto;padding:8px;font-family:sarabun,sans-serif;font-size:12px;color:#000;">';
-    body += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">';
-    if (logoUrl) body += '<img src="' + logoUrl + '" style="width:48px;height:48px;object-fit:contain;">'; else body += '<div></div>';
-    body += '<div style="text-align:center;flex:1;"><p style="font-size:12px;margin:2px 0 0;">' + escHtml(orgName) + '</p><p style="font-size:16px;font-weight:bold;margin:0;">ทะเบียนคุมสินทรัพย์รายตัว</p></div>';
-    if (qrDataUrl) body += '<img src="' + qrDataUrl + '" style="width:70px;height:70px;">'; else body += '<div></div>';
-    body += '</div>';
-
-    // Info table
-    body += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:8px;"><tbody>';
-    body += '<tr><td style="width:18%;border:1px solid #333;padding:4px 6px;vertical-align:top;"><span style="color:#666;font-size:10px;">ประเภท/ชนิด/รุ่น</span><br><span style="font-weight:600;font-size:11px;">' + escHtml((cat?cat.name:'') + ' / ' + (type?type.name:'') + ' / ' + (a.brand_model||'')) + '</span></td>';
-    body += '<td style="width:14%;border:1px solid #333;padding:4px 6px;vertical-align:top;"><span style="color:#666;font-size:10px;">รหัสสินทรัพย์</span><br><span style="font-weight:600;font-size:11px;">' + escHtml(a.asset_code||'-') + '</span></td>';
-    body += '<td style="width:14%;border:1px solid #333;padding:4px 6px;vertical-align:top;"><span style="color:#666;font-size:10px;">หมายเลข S/N</span><br><span style="font-weight:600;font-size:11px;">' + escHtml(a.serial_number||'-') + '</span></td>';
-    body += '<td style="width:14%;border:1px solid #333;padding:4px 6px;vertical-align:top;"><span style="color:#666;font-size:10px;">เลขที่ GFMIS</span><br><span style="font-weight:600;font-size:11px;">' + escHtml(a.gfmis_number||'-') + '</span></td>';
-    body += '<td style="width:14%;border:1px solid #333;padding:4px 6px;vertical-align:top;"><span style="color:#666;font-size:10px;">เลขทะเบียน</span><br><span style="font-weight:600;font-size:11px;">' + escHtml(a.asset_number||'-') + '</span></td></tr>';
-    body += '<tr><td style="border:1px solid #333;padding:4px 6px;vertical-align:top;"><span style="color:#666;font-size:10px;">ลักษณะ/ชื่อ/รุ่น</span><br><span style="font-weight:600;font-size:11px;">' + escHtml(a.description||'') + '</span></td>';
-    body += '<td style="border:1px solid #333;padding:4px 6px;vertical-align:top;"><span style="color:#666;font-size:10px;">สถานที่ตั้ง</span><br><span style="font-weight:600;font-size:11px;">' + escHtml(a.location||'-') + '</span></td>';
-    body += '<td colspan="2" style="border:1px solid #333;padding:4px 6px;vertical-align:top;"><span style="color:#666;font-size:10px;">เครื่องประจำตำแหน่ง</span><br><span style="font-weight:600;font-size:11px;">' + escHtml(a.installed_location||(amphoe?amphoe.name:'-')) + '</span></td>';
-    body += '<td style="border:1px solid #333;padding:4px 6px;vertical-align:top;"><span style="color:#666;font-size:10px;">หน่วยงาน</span><br><span style="font-weight:600;font-size:11px;">' + escHtml(amphoe?amphoe.name:'-') + '</span></td></tr>';
-    body += '<tr><td style="border:1px solid #333;padding:4px 6px;vertical-align:top;"><span style="color:#666;font-size:10px;">วิธีการได้มา</span><br><span style="font-weight:600;font-size:11px;">' + escHtml(a.acquisition_method||'-') + '</span></td>';
-    body += '<td colspan="2" style="border:1px solid #333;padding:4px 6px;vertical-align:top;"><span style="color:#666;font-size:10px;">ผู้ใช้งาน/ผู้รับผิดชอบ</span><br><span style="font-weight:600;font-size:11px;">' + escHtml(a.responsible_person||'-') + '</span></td>';
-    body += '<td colspan="2" style="border:1px solid #333;padding:4px 6px;vertical-align:top;"><span style="color:#666;font-size:10px;">หมายเหตุ</span><br><span style="font-weight:600;font-size:11px;">' + escHtml(a.notes||'-') + '</span></td></tr>';
-    body += '</tbody></table>';
-
-    // Depreciation table
-    body += '<p style="font-size:12px;font-weight:600;margin:12px 0 4px">ตารางค่าเสื่อมราคา</p>';
-    body += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:8px;"><thead><tr>';
-    body += '<th style="border:1px solid #333;padding:4px 6px;background:#f3f4f6;text-align:center;font-weight:600;">ลำดับ</th>';
-    body += '<th style="border:1px solid #333;padding:4px 6px;background:#f3f4f6;text-align:center;font-weight:600;">วัน/เดือน/ปี<br>(เริ่มต้น)</th>';
-    body += '<th style="border:1px solid #333;padding:4px 6px;background:#f3f4f6;text-align:center;font-weight:600;">ปีงบประมาณ</th>';
-    body += '<th style="border:1px solid #333;padding:4px 6px;background:#f3f4f6;text-align:center;font-weight:600;">รายการ</th>';
-    body += '<th style="border:1px solid #333;padding:4px 6px;background:#f3f4f6;text-align:center;font-weight:600;">จำนวน<br>(หน่วย)</th>';
-    body += '<th style="border:1px solid #333;padding:4px 6px;background:#f3f4f6;text-align:center;font-weight:600;">ราคาต่อ<br>หน่วย</th>';
-    body += '<th style="border:1px solid #333;padding:4px 6px;background:#f3f4f6;text-align:center;font-weight:600;">มูลค่า<br>รวม</th>';
-    body += '<th style="border:1px solid #333;padding:4px 6px;background:#f3f4f6;text-align:center;font-weight:600;">อายุใช้งาน<br>(ปี)</th>';
-    body += '<th style="border:1px solid #333;padding:4px 6px;background:#f3f4f6;text-align:center;font-weight:600;">อัตรา<br>ค่าเสื่อม%</th>';
-    body += '<th style="border:1px solid #333;padding:4px 6px;background:#f3f4f6;text-align:center;font-weight:600;">ค่าเสื่อม<br>ประจำปี</th>';
-    body += '<th style="border:1px solid #333;padding:4px 6px;background:#f3f4f6;text-align:center;font-weight:600;">ค่าเสื่อม<br>สะสม</th>';
-    body += '<th style="border:1px solid #333;padding:4px 6px;background:#f3f4f6;text-align:center;font-weight:600;">มูลค่า<br>สุทธิ</th>';
-    body += '<th style="border:1px solid #333;padding:4px 6px;background:#f3f4f6;text-align:center;font-weight:600;">หมายเหตุ</th>';
-    body += '</tr></thead><tbody>';
-    if (schedule.length) {
-      schedule.forEach(function(row, idx) {
-        body += '<tr>';
-        body += '<td style="border:1px solid #333;padding:4px 6px;text-align:center;">' + (idx+1) + '</td>';
-        body += '<td style="border:1px solid #333;padding:4px 6px;text-align:center;">' + escHtml(formatDate(a.receive_date)) + '</td>';
-        body += '<td style="border:1px solid #333;padding:4px 6px;text-align:center;">' + escHtml(a.fiscal_year||'-') + '</td>';
-        body += '<td style="border:1px solid #333;padding:4px 6px;">' + escHtml(a.description||'') + '</td>';
-        body += '<td style="border:1px solid #333;padding:4px 6px;text-align:center;">1 เครื่อง</td>';
-        body += '<td style="border:1px solid #333;padding:4px 6px;text-align:right;">' + _fmtMoney(price) + '</td>';
-        body += '<td style="border:1px solid #333;padding:4px 6px;text-align:right;">' + _fmtMoney(price) + '</td>';
-        body += '<td style="border:1px solid #333;padding:4px 6px;text-align:center;">' + usefulLife + '</td>';
-        body += '<td style="border:1px solid #333;padding:4px 6px;text-align:center;">' + (depRate ? depRate.toFixed(2) + '%' : '-') + '</td>';
-        body += '<td style="border:1px solid #333;padding:4px 6px;text-align:right;">' + Number(row.depreciation).toLocaleString('th-TH',{maximumFractionDigits:2}) + '</td>';
-        body += '<td style="border:1px solid #333;padding:4px 6px;text-align:right;">' + Number(row.accumulated).toLocaleString('th-TH',{maximumFractionDigits:2}) + '</td>';
-        body += '<td style="border:1px solid #333;padding:4px 6px;text-align:right;">' + Number(row.bookValue).toLocaleString('th-TH',{maximumFractionDigits:2}) + '</td>';
-        body += '<td style="border:1px solid #333;padding:4px 6px;"></td>';
-        body += '</tr>';
-      });
-    } else {
-      body += '<tr><td colspan="13" style="border:1px solid #333;padding:4px 6px;text-align:center;">ไม่มีข้อมูลค่าเสื่อมราคา</td></tr>';
+      new QRCode(qrCanvas, { text: qrUrl, width: 120, height: 120, correctLevel: QRCode.CorrectLevel.H });
+      setTimeout(function(){
+        qrDataUrl = qrCanvas.toDataURL ? qrCanvas.toDataURL() : (qrCanvas.querySelector('img') ? qrCanvas.querySelector('img').src : '');
+        _openRegisterModal(a, cat, type, amphoe, orgName, logoUrl, schedule, usefulLife, depRate, price, annualDep, qrDataUrl, qrUrl);
+      }, 200);
+    } catch(e) {
+      _openRegisterModal(a, cat, type, amphoe, orgName, logoUrl, schedule, usefulLife, depRate, price, annualDep, '', qrUrl);
     }
-    body += '</tbody></table>';
-
-    // Signatures
-    body += '<div style="margin-top:24px;display:flex;justify-content:space-around;font-size:11px;">';
-    body += '<div style="text-align:center;width:140px;"><p>ผู้ตรวจสอบ</p><div style="border-top:1px solid #333;margin-top:32px;padding-top:4px;">(................................................)</div><p>วันที่ ....../....../......</p></div>';
-    body += '<div style="text-align:center;width:140px;"><p>ผู้รับผิดชอบสินทรัพย์</p><div style="border-top:1px solid #333;margin-top:32px;padding-top:4px;">(................................................)</div><p>วันที่ ....../....../......</p></div>';
-    body += '<div style="text-align:center;width:140px;"><p>เจ้าหน้าที่พัสดุ</p><div style="border-top:1px solid #333;margin-top:32px;padding-top:4px;">(................................................)</div><p>วันที่ ....../....../......</p></div>';
-    body += '</div>';
-
-    body += '<p style="text-align:center;font-size:9px;color:#666;margin-top:16px">กรมบัญชีกลางกระทรวงการคลัง / สำนักงานพัฒนาบุคคลากร</p>';
-    body += '</div>';
-
-    // Store HTML for actual print
-    window._lastRegisterPrintHTML = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ทะเบียนคุมสินทรัพย์รายตัว</title><style>@page{size:landscape} body{font-family:sarabun,sans-serif;margin:0;padding:20px;background:#fff;color:#000} .reg-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px} .reg-header-center{text-align:center;flex:1} .reg-logo{width:48px;height:48px;object-fit:contain} .reg-title{font-size:16px;font-weight:bold;margin:0} .reg-org{font-size:12px;margin:2px 0 0} .reg-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px} .reg-table th,.reg-table td{border:1px solid #333;padding:4px 6px} .reg-table th{background:#f3f4f6;text-align:center;font-weight:600} .reg-table td{vertical-align:top} .reg-label{color:#666;font-size:10px} .reg-value{font-weight:600;font-size:11px} .reg-sign{margin-top:24px;display:flex;justify-content:space-around;font-size:11px} .reg-sign-box{text-align:center;width:140px} .reg-sign-line{border-top:1px solid #333;margin-top:32px;padding-top:4px} @media print{body{padding:0} .no-print{display:none}}</style></head><body>' + body.replace(/style="max-height:70vh;overflow:auto;padding:8px;font-family:sarabun,sans-serif;font-size:12px;color:#000;"/g, '') + '</body></html>';
-
-    var footer = '<button onclick="closeModal()" class="btn-secondary">ปิด</button>';
-    footer += '<button onclick="_doPrintRegister()" class="btn-primary"><i class="fi fi-rr-print mr-1"></i>พิมพ์</button>';
-    openModal('ทะเบียนคุมสินทรัพย์รายตัว', body, footer);
   }).catch(function() {
     hideLoading();
     showError('โหลดข้อมูลไม่สำเร็จ');
   });
+}
+
+function _openRegisterModal(a, cat, type, amphoe, orgName, logoUrl, schedule, usefulLife, depRate, price, annualDep, qrDataUrl, qrUrl) {
+  var inner = _buildRegisterHTML(a, cat, type, amphoe, orgName, logoUrl, schedule, usefulLife, depRate, price, qrDataUrl);
+
+  // Store for actual print
+  window._lastRegisterPrintHTML = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ทะเบียนคุมสินทรัพย์รายตัว</title>' +
+    '<style>@page{size:landscape;margin:15mm} body{font-family:sarabun,sans-serif;margin:0;padding:0;background:#fff;color:#000;font-size:11px}' +
+    'table{border-collapse:collapse;width:100%} th,td{border:1px solid #333;padding:3px 5px;font-size:10px}' +
+    'th{background:#f3f4f6;text-align:center;font-weight:600} @media print{.no-print{display:none}}</style>' +
+    '</head><body>' + inner + '</body></html>';
+
+  // Build custom wide overlay
+  var overlay = document.createElement('div');
+  overlay.id = 'regModalOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;';
+  overlay.onclick = function(e){ if(e.target===overlay) _closeRegisterModal(); };
+
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.3);width:100%;max-width:900px;display:flex;flex-direction:column;font-family:sarabun,sans-serif;';
+
+  // Header
+  var hdr = '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #e5e7eb;flex-shrink:0;">';
+  hdr += '<div style="display:flex;align-items:center;gap:8px;"><span style="color:#16a34a;font-size:16px;">&#128196;</span><span style="font-weight:700;font-size:15px;color:#1f2937;">ทะเบียนคุมสินทรัพย์รายตัว</span></div>';
+  hdr += '<div style="display:flex;align-items:center;gap:8px;">';
+  hdr += '<button onclick="_doPrintRegister()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#16a34a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;"><span>&#128424;</span> พิมพ์</button>';
+  hdr += '<button onclick="_closeRegisterModal()" style="display:inline-flex;align-items:center;gap:4px;padding:8px 14px;background:#f3f4f6;color:#374151;border:none;border-radius:8px;font-size:13px;cursor:pointer;">&#10005; ปิด</button>';
+  hdr += '</div></div>';
+
+  // Body with scrollable content
+  var bdy = '<div style="padding:24px;overflow-y:auto;max-height:calc(90vh - 80px);">' + inner + '</div>';
+
+  box.innerHTML = hdr + bdy;
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+}
+
+function _buildRegisterHTML(a, cat, type, amphoe, orgName, logoUrl, schedule, usefulLife, depRate, price, qrDataUrl) {
+  var F = function(n){ return Number(n||0).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+
+  var html = '';
+
+  // Header: logo | title | QR
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">';
+  html += '<div style="display:flex;align-items:center;gap:10px;">';
+  if (logoUrl) html += '<img src="' + logoUrl + '" style="width:52px;height:52px;object-fit:contain;">';
+  html += '<div><div style="font-weight:700;font-size:13px;">' + escHtml(orgName) + '</div><div style="font-size:11px;color:#555;">' + escHtml(amphoe ? amphoe.name : '') + '</div></div>';
+  html += '</div>';
+  html += '<div style="text-align:center;"><div style="font-size:17px;font-weight:700;">ทะเบียนคุมสินทรัพย์รายตัว</div></div>';
+  html += '<div style="text-align:center;">';
+  if (qrDataUrl) {
+    html += '<img src="' + qrDataUrl + '" style="width:80px;height:80px;display:block;">';
+    html += '<div style="font-size:9px;color:#888;margin-top:2px;">สแกนดูรายละเอียด</div>';
+  }
+  html += '</div>';
+  html += '</div>';
+
+  // Info table
+  var td = function(label, value, colspan, width) {
+    return '<td' + (colspan?' colspan="'+colspan+'"':'') + (width?' style="width:'+width+';border:1px solid #ccc;padding:5px 7px;vertical-align:top;"':' style="border:1px solid #ccc;padding:5px 7px;vertical-align:top;"') + '>'
+      + '<div style="font-size:9px;color:#666;margin-bottom:2px;">' + label + '</div>'
+      + '<div style="font-weight:600;font-size:11px;">' + escHtml(String(value||'-')) + '</div>'
+      + '</td>';
+  };
+
+  html += '<table style="width:100%;border-collapse:collapse;margin-bottom:4px;"><tbody>';
+  html += '<tr>';
+  html += td('ประเภทครุภัณฑ์', (cat?cat.name:'') + (type?' / '+type.name:''), null, '22%');
+  html += td('รหัสสินทรัพย์', a.asset_code, null, '16%');
+  html += td('หมายเลข S/N', a.serial_number, null, '18%');
+  html += td('เลขที่ GFMIS', a.gfmis_number, null, '14%');
+  html += td('เลขทะเบียน', a.asset_number, null, '14%');
+  html += '</tr><tr>';
+  html += td('ลักษณะ/ชื่อ/รุ่น', a.description + (a.brand_model ? ' ' + a.brand_model : ''));
+  html += td('สถานภาพ', a.status === 'active' ? 'กำลังใช้งาน' : a.status === 'damaged' ? 'ชำรุด' : 'จำหน่ายแล้ว');
+  html += td('เครื่องประจำตำแหน่ง', a.installed_location || (amphoe ? 'ส่วนราชการ ' + amphoe.name : '-'));
+  html += td('หน่วยงาน', amphoe ? amphoe.name : '-');
+  html += '</tr><tr>';
+  html += td('วิธีการได้มา', a.acquisition_method);
+  html += td('ผู้ขาย/ผู้บริจาค', a.supplier_name || '-', 2);
+  html += td('หมายเหตุ', a.notes || '-', null, '20%');
+  html += '</tr>';
+  html += '</tbody></table>';
+
+  // Depreciation table
+  html += '<div style="font-size:12px;font-weight:700;margin:14px 0 6px;">ตารางค่าเสื่อมราคา</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:10px;"><thead>';
+  html += '<tr style="background:#f3f4f6;">';
+  ['ลำดับ','วัน/เดือน/ปี\n(รับเข้า)','ปีงบ\nประมาณ','รายการ','จำนวน\n(หน่วย)','ราคาต่อ\nหน่วย','มูลค่ารวม','อายุใช้\nงาน(ปี)','อัตรา\nค่าเสื่อม%','ค่าเสื่อม\nประจำปี','ค่าเสื่อม\nสะสม','มูลค่า\nสุทธิ','หมายเหตุ'].forEach(function(h){
+    html += '<th style="border:1px solid #ccc;padding:4px 5px;text-align:center;white-space:pre-line;">' + h + '</th>';
+  });
+  html += '</tr></thead><tbody>';
+  if (schedule.length) {
+    schedule.forEach(function(row, i) {
+      html += '<tr' + (i%2===1?' style="background:#f9fafb;"':'') + '>';
+      html += '<td style="border:1px solid #ccc;padding:4px 5px;text-align:center;">' + (i+1) + '</td>';
+      html += '<td style="border:1px solid #ccc;padding:4px 5px;text-align:center;">' + escHtml(formatDate(a.receive_date)||'-') + '</td>';
+      html += '<td style="border:1px solid #ccc;padding:4px 5px;text-align:center;">' + escHtml(String(a.fiscal_year||'-')) + '</td>';
+      html += '<td style="border:1px solid #ccc;padding:4px 5px;">' + escHtml(a.description||'') + '</td>';
+      html += '<td style="border:1px solid #ccc;padding:4px 5px;text-align:center;">1 เครื่อง</td>';
+      html += '<td style="border:1px solid #ccc;padding:4px 5px;text-align:right;">' + F(price) + '</td>';
+      html += '<td style="border:1px solid #ccc;padding:4px 5px;text-align:right;">' + F(price) + '</td>';
+      html += '<td style="border:1px solid #ccc;padding:4px 5px;text-align:center;">' + usefulLife + '</td>';
+      html += '<td style="border:1px solid #ccc;padding:4px 5px;text-align:center;">' + (depRate ? depRate.toFixed(2)+'%' : '-') + '</td>';
+      html += '<td style="border:1px solid #ccc;padding:4px 5px;text-align:right;">' + F(row.depreciation) + '</td>';
+      html += '<td style="border:1px solid #ccc;padding:4px 5px;text-align:right;">' + F(row.accumulated) + '</td>';
+      html += '<td style="border:1px solid #ccc;padding:4px 5px;text-align:right;">' + F(row.bookValue) + '</td>';
+      html += '<td style="border:1px solid #ccc;padding:4px 5px;"></td>';
+      html += '</tr>';
+    });
+  } else {
+    html += '<tr><td colspan="13" style="border:1px solid #ccc;padding:8px;text-align:center;color:#999;">ไม่มีข้อมูลค่าเสื่อมราคา</td></tr>';
+  }
+  html += '</tbody></table>';
+
+  // Signatures
+  html += '<div style="margin-top:36px;display:flex;justify-content:space-around;font-size:11px;">';
+  ['ผู้ตรวจสอบ','ผู้รับผิดชอบสินทรัพย์','เจ้าหน้าที่พัสดุ'].forEach(function(sig){
+    html += '<div style="text-align:center;min-width:160px;">';
+    html += '<div style="border-top:1px solid #333;padding-top:6px;margin-top:48px;">(' + '&nbsp;'.repeat(24) + ')</div>';
+    html += '<div style="font-weight:600;margin-top:4px;">' + sig + '</div>';
+    html += '<div style="color:#777;margin-top:4px;">วันที่ &nbsp;...../...../......</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  html += '<div style="text-align:center;font-size:9px;color:#999;margin-top:16px;">กลังบริหารจัดการสินทรัพย์ | สำนักงานพัฒนาชุมชน</div>';
+  return html;
+}
+
+function _closeRegisterModal() {
+  var el = document.getElementById('regModalOverlay');
+  if (el) el.remove();
 }
 
 function _doPrintRegister() {
@@ -3850,34 +3908,155 @@ function submitDepreciation() {
 }
 
 // ===== ASSET REGISTER (ทะเบียนคุมสินทรัพย์รายตัว) =====
+var _regAssets = [], _regTypes = [], _regCats = [], _regAmphoes = [], _regFiscal = '', _regAmphoe = 'all', _regCat = 'all', _regSearch = '';
+
 function renderAssetRegister() {
   if (AUTH.user.role === 'employee') { loadPage('dashboard'); return; }
   showLoading('โหลดข้อมูล...');
-  callAPI('getAssets', AUTH.token).then(function(res) {
+  Promise.all([
+    callAPI('getAssets', AUTH.token),
+    callAPI('getAssetCategories', AUTH.token),
+    callAPI('getAssetTypes', AUTH.token),
+    callAPI('getAmphoes', AUTH.token),
+    callAPI('getFiscalYears', AUTH.token)
+  ]).then(function(res) {
     hideLoading();
-    var assets = res.data || [];
-    assets.sort(function(a,b){ return (a.asset_code||'').localeCompare(b.asset_code||''); });
-    var html = '<div class="fade-in space-y-4">';
-    html += '<div class="card"><div class="card-header"><h3 class="font-semibold text-gray-700 flex items-center gap-2"><i class="fi fi-rr-file-invoice text-navy-600"></i> ทะเบียนคุมสินทรัพย์รายตัว</h3></div>';
-    html += '<div class="card-body">';
-    html += '<div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-600"><tr><th class="px-4 py-3 text-left">รหัส</th><th class="px-4 py-3 text-left">รายการ</th><th class="px-4 py-3 text-center">สถานะ</th><th class="px-4 py-3 text-right">ราคา</th><th class="px-4 py-3 text-center w-20"></th></tr></thead><tbody class="divide-y divide-gray-100">';
-    if (!assets.length) {
-      html += '<tr><td colspan="5" class="text-center py-10 text-gray-400">ไม่พบข้อมูลครุภัณฑ์</td></tr>';
-    } else {
-      assets.forEach(function(a) {
-        html += '<tr><td class="px-4 py-2.5 text-xs text-gray-500">' + escHtml(a.asset_code||'-') + '</td>';
-        html += '<td class="px-4 py-2.5"><p class="font-medium text-gray-800 text-sm">' + escHtml(a.description) + '</p><p class="text-xs text-gray-500">' + escHtml(a.brand_model||'') + '</p></td>';
-        html += '<td class="px-4 py-2.5 text-center"><span class="px-2 py-0.5 rounded-full text-xs font-medium ' + _assetStatusClass(a.status) + '">' + _assetStatusLabel(a.status) + '</span></td>';
-        html += '<td class="px-4 py-2.5 text-right text-sm font-medium text-gray-800">' + _fmtMoney(a.unit_price) + '</td>';
-        html += '<td class="px-4 py-2.5 text-center"><div class="flex gap-1 justify-center">';
-        html += '<button onclick="window.open(\'?public_asset_id=' + a.id + '\', \'_blank\')" class="w-7 h-7 bg-emerald-100 text-emerald-700 rounded-lg flex items-center justify-center hover:bg-emerald-200" title="ดูรายละเอียด"><i class="fi fi-rr-eye text-xs"></i></button>';
-        html += '<button onclick="printAssetRegister(\'' + a.id + '\')" class="w-7 h-7 bg-navy-100 text-navy-700 rounded-lg flex items-center justify-center hover:bg-navy-200" title="พิมพ์ทะเบียนคุมฯ"><i class="fi fi-rr-print text-xs"></i></button>';
-        html += '</div></td></tr>';
-      });
-    }
-    html += '</tbody></table></div></div></div></div>';
-    document.getElementById('mainContent').innerHTML = html;
+    _regAssets = (res[0].data || []).slice().sort(function(a,b){ return (a.asset_code||'').localeCompare(b.asset_code||''); });
+    _regCats = res[1].data || [];
+    _regTypes = res[2].data || [];
+    _regAmphoes = res[3].data || [];
+    var fyData = res[4].data || [];
+    // set default fiscal year to active one
+    var activeFY = fyData.find(function(f){ return f.is_active !== false; });
+    if (!_regFiscal && activeFY) _regFiscal = String(activeFY.year);
+    _buildRegisterPage(fyData);
   }).catch(function(){ hideLoading(); showError('โหลดข้อมูลไม่สำเร็จ'); });
+}
+
+function _buildRegisterPage(fyData) {
+  var fyList = fyData || [];
+
+  // Compute net value for each asset
+  function _netValue(a) {
+    var type = _regTypes.find(function(t){ return t.id === a.type_id; });
+    var price = parseFloat(a.unit_price || 0);
+    var life = type && type.useful_life ? parseInt(type.useful_life) : 0;
+    var rate = type && type.depreciation_rate ? parseFloat(type.depreciation_rate) : 0;
+    if (!life && !rate) return price;
+    var annualDep = rate > 0 ? price * (rate / 100) : price / life;
+    var receiveDate = a.receive_date ? new Date(a.receive_date) : null;
+    var now = new Date();
+    var yearsUsed = receiveDate ? (now - receiveDate) / (1000 * 60 * 60 * 24 * 365.25) : 0;
+    var accumulated = Math.min(annualDep * yearsUsed, price - 1);
+    return Math.max(price - accumulated, 1);
+  }
+
+  function _depRate(a) {
+    var type = _regTypes.find(function(t){ return t.id === a.type_id; });
+    return type && type.depreciation_rate ? parseFloat(type.depreciation_rate).toFixed(2) + '%' : '-';
+  }
+
+  // Filter
+  var assets = _regAssets.filter(function(a) {
+    if (_regFiscal && String(a.fiscal_year||'') !== String(_regFiscal)) return false;
+    if (_regAmphoe !== 'all' && a.amphoe_id !== _regAmphoe) return false;
+    if (_regCat !== 'all' && a.category_id !== _regCat) return false;
+    if (_regSearch) {
+      var s = _regSearch.toLowerCase();
+      if ((a.asset_code||'').toLowerCase().indexOf(s) < 0 &&
+          (a.description||'').toLowerCase().indexOf(s) < 0 &&
+          (a.serial_number||'').toLowerCase().indexOf(s) < 0 &&
+          (a.gfmis_number||'').toLowerCase().indexOf(s) < 0) return false;
+    }
+    return true;
+  });
+
+  var html = '<div class="fade-in space-y-4">';
+
+  // Filter bar
+  html += '<div class="bg-white rounded-xl border border-gray-200 p-4 flex flex-wrap gap-3 items-end">';
+  // ปีงบประมาณ
+  html += '<div class="min-w-[140px]"><label class="text-xs text-gray-500 mb-1 block font-medium">ปีงบประมาณ</label>';
+  html += '<select id="regFiscal" onchange="_regUpdateFilter()" class="form-input text-sm">';
+  html += '<option value="">ทุกปี</option>';
+  fyList.forEach(function(f){ html += '<option value="' + f.year + '"' + (_regFiscal==f.year?' selected':'') + '>' + f.year + (f.is_active!==false?' (ปัจจุบัน)':'') + '</option>'; });
+  html += '</select></div>';
+  // หน่วยงาน
+  html += '<div class="min-w-[160px]"><label class="text-xs text-gray-500 mb-1 block font-medium">หน่วยงาน</label>';
+  html += '<select id="regAmphoe" onchange="_regUpdateFilter()" class="form-input text-sm">';
+  html += '<option value="all">ทุกหน่วยงาน</option>';
+  _regAmphoes.forEach(function(am){ html += '<option value="' + am.id + '"' + (_regAmphoe===am.id?' selected':'') + '>' + escHtml(am.name) + '</option>'; });
+  html += '</select></div>';
+  // ประเภท
+  html += '<div class="min-w-[160px]"><label class="text-xs text-gray-500 mb-1 block font-medium">ประเภท</label>';
+  html += '<select id="regCat" onchange="_regUpdateFilter()" class="form-input text-sm">';
+  html += '<option value="all">ทุกประเภท</option>';
+  _regCats.forEach(function(c){ html += '<option value="' + c.id + '"' + (_regCat===c.id?' selected':'') + '>' + escHtml(c.name) + '</option>'; });
+  html += '</select></div>';
+  // ค้นหา
+  html += '<div class="flex-1 min-w-[200px]"><label class="text-xs text-gray-500 mb-1 block font-medium">ค้นหา</label>';
+  html += '<div class="flex gap-2"><input id="regSearch" type="text" class="form-input text-sm flex-1" placeholder="รหัส / ชื่อ / S/N / GFMIS" value="' + escHtml(_regSearch) + '" onkeydown="if(event.key===\'Enter\') _regUpdateFilter()"><button onclick="_regUpdateFilter()" class="btn-primary btn-sm flex items-center gap-1 px-4"><i class="fi fi-rr-search"></i> ค้นหา</button><button onclick="_regResetFilter()" class="btn-secondary btn-sm px-3" title="รีเซ็ต"><i class="fi fi-rr-refresh"></i></button></div></div>';
+  html += '<div class="self-end text-xs text-gray-500 whitespace-nowrap">พบ ' + assets.length + ' รายการ</div>';
+  html += '</div>';
+
+  // Table
+  html += '<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">';
+  html += '<div class="overflow-x-auto">';
+  html += '<table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-600 border-b border-gray-200">';
+  html += '<tr>';
+  html += '<th class="px-3 py-3 text-center w-10">ลำดับ</th>';
+  html += '<th class="px-3 py-3 text-left">รหัสครุภัณฑ์</th>';
+  html += '<th class="px-3 py-3 text-left">รายการ</th>';
+  html += '<th class="px-3 py-3 text-left">ประเภท</th>';
+  html += '<th class="px-3 py-3 text-left">หน่วยงาน</th>';
+  html += '<th class="px-3 py-3 text-center">วันที่ได้รับ</th>';
+  html += '<th class="px-3 py-3 text-right">ราคาทุน</th>';
+  html += '<th class="px-3 py-3 text-center">อัตราเสื่อม%</th>';
+  html += '<th class="px-3 py-3 text-right" style="color:#c0392b;">มูลค่าสุทธิ</th>';
+  html += '<th class="px-3 py-3 text-center">จัดการ</th>';
+  html += '</tr></thead><tbody class="divide-y divide-gray-100">';
+
+  if (!assets.length) {
+    html += '<tr><td colspan="10" class="text-center py-10 text-gray-400">ไม่พบข้อมูลครุภัณฑ์</td></tr>';
+  } else {
+    assets.forEach(function(a, idx) {
+      var cat = _regCats.find(function(c){ return c.id === a.category_id; });
+      var amphoe = _regAmphoes.find(function(am){ return am.id === a.amphoe_id; });
+      var net = _netValue(a);
+      var rate = _depRate(a);
+      var price = parseFloat(a.unit_price || 0);
+      html += '<tr class="hover:bg-gray-50">';
+      html += '<td class="px-3 py-2.5 text-center text-gray-500">' + (idx+1) + '</td>';
+      html += '<td class="px-3 py-2.5 text-xs font-medium text-emerald-700">' + escHtml(a.asset_code||'-') + '</td>';
+      html += '<td class="px-3 py-2.5"><p class="font-medium text-gray-800 text-sm leading-snug">' + escHtml(a.description||'-') + '</p><p class="text-xs text-gray-400">' + escHtml(a.brand_model||'') + '</p></td>';
+      html += '<td class="px-3 py-2.5 text-xs text-gray-600">' + escHtml(cat ? cat.name : '-') + '</td>';
+      html += '<td class="px-3 py-2.5 text-xs text-emerald-700 font-medium">' + escHtml(amphoe ? amphoe.name : '-') + '</td>';
+      html += '<td class="px-3 py-2.5 text-center text-xs text-gray-600">' + escHtml(formatDate(a.receive_date)||'-') + '</td>';
+      html += '<td class="px-3 py-2.5 text-right text-sm text-gray-800">' + _fmtMoney(price) + '</td>';
+      html += '<td class="px-3 py-2.5 text-center text-xs text-gray-600">' + rate + '</td>';
+      html += '<td class="px-3 py-2.5 text-right text-sm font-semibold" style="color:#c0392b;">' + _fmtMoney(net) + '</td>';
+      html += '<td class="px-3 py-2.5"><div class="flex gap-1.5 justify-center">';
+      html += '<button onclick="printAssetRegister(\'' + a.id + '\')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-600 text-white hover:bg-emerald-700"><i class="fi fi-rr-book-open-cover"></i> ทะเบียน</button>';
+      html += '<button onclick="window.open(\'?public_asset_id=' + a.id + '\', \'_blank\')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-600 text-white hover:bg-emerald-700"><i class="fi fi-rr-eye"></i> ดูรายละเอียด</button>';
+      html += '</div></td>';
+      html += '</tr>';
+    });
+  }
+  html += '</tbody></table></div></div></div>';
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+function _regUpdateFilter() {
+  _regFiscal = (document.getElementById('regFiscal')||{}).value || '';
+  _regAmphoe = (document.getElementById('regAmphoe')||{}).value || 'all';
+  _regCat = (document.getElementById('regCat')||{}).value || 'all';
+  _regSearch = (document.getElementById('regSearch')||{}).value || '';
+  _buildRegisterPage(_settingsFiscalYears.length ? _settingsFiscalYears : []);
+}
+
+function _regResetFilter() {
+  _regFiscal = ''; _regAmphoe = 'all'; _regCat = 'all'; _regSearch = '';
+  _buildRegisterPage(_settingsFiscalYears.length ? _settingsFiscalYears : []);
 }
 
 var _arTab = 'list', _arFiscal = '', _arAmphoe = 'all', _arCat = 'all', _arStatus = 'all';
