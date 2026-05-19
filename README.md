@@ -22,16 +22,7 @@
 
 ## วิธีติดตั้ง (Step by Step)
 
-### ขั้นที่ 1 — เตรียม Google Sheets (ฐานข้อมูล)
-
-1. เข้า [Google Sheets](https://sheets.google.com) → สร้าง Spreadsheet ใหม่
-2. ตั้งชื่อตามต้องการ เช่น `ระบบวัสดุสิ้นเปลือง DB`
-3. จด **Spreadsheet ID** จาก URL:  
-   `https://docs.google.com/spreadsheets/d/`**`<SPREADSHEET_ID>`**`/edit`
-
----
-
-### ขั้นที่ 2 — ติดตั้ง Google Apps Script (Backend)
+### ขั้นที่ 1 — ติดตั้ง Google Apps Script (Backend)
 
 1. ใน Google Sheets → เมนู **ส่วนขยาย** → **Apps Script**
 2. ลบโค้ดเดิมทิ้งทั้งหมด
@@ -48,18 +39,18 @@
 
 ---
 
-### ขั้นที่ 3 — ตั้งค่า URL ใน Frontend
+### ขั้นที่ 2 — ตั้งค่า URL ใน Frontend
 
 1. เปิดไฟล์ `api.js`
 2. แก้ไขบรรทัด:
    ```js
    var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/XXXXXXXXXX/exec';
    ```
-   เปลี่ยน `XXXXXXXXXX` เป็น Web app URL ที่ได้จากขั้นที่ 2
+   เปลี่ยน `XXXXXXXXXX` เป็น Web app URL ที่ได้จากขั้นที่ 1
 
 ---
 
-### ขั้นที่ 4 — Deploy Frontend บน GitHub Pages
+### ขั้นที่ 3 — Deploy Frontend บน GitHub Pages
 
 1. สร้าง Repository ใหม่บน [GitHub](https://github.com) (หรือใช้ที่มีอยู่)
 2. Push ไฟล์ทั้งหมด (**ยกเว้น** `code.gs` ไม่จำเป็นต้อง push แต่ไม่มีผลเสีย):
@@ -78,7 +69,7 @@
 
 ---
 
-### ขั้นที่ 5 — เข้าใช้งานครั้งแรก
+### ขั้นที่ 4 — เข้าใช้งานครั้งแรก
 
 เปิด URL จาก GitHub Pages แล้วเข้าสู่ระบบด้วยบัญชีเริ่มต้น:
 
@@ -92,7 +83,7 @@
 
 ---
 
-### ขั้นที่ 6 — ตั้งค่าระบบ (แนะนำทำก่อนใช้งาน)
+### ขั้นที่ 5 — ตั้งค่าระบบ (แนะนำทำก่อนใช้งาน)
 
 เข้าเมนู **ตั้งค่า** แล้วกรอกข้อมูลต่อไปนี้:
 
