@@ -3505,6 +3505,7 @@ function buildAssetReportsPage() {
 
   html += '</div>';
   document.getElementById('mainContent').innerHTML = html;
+  if (_arTab === 'list') setTimeout(_arRenderQRs, 50);
 }
 
 function _arSetTab(tab) { _arTab = tab; buildAssetReportsPage(); }
@@ -3523,9 +3524,9 @@ function _arBuildList(assets) {
   html += '<table class="w-full text-xs ar-table"><thead><tr>';
   html += '<th>ลำดับ</th><th>วันที่ได้รับ/<br>จัดซื้อ</th><th>เลขที่สินทรัพย์/<br>เลขที่ใบ GFMIS</th>';
   html += '<th>รหัสครุภัณฑ์</th><th>ประเภท</th><th>ชนิด</th><th>รายการ</th><th>ราคา/<br>หน่วย</th>';
-  html += '<th>วิธีการ<br>ได้มา</th><th>สถานที่<br>ใช้งาน</th><th>ผู้ใช้</th><th>สถานะ</th>';
+  html += '<th>วิธีการ<br>ได้มา</th><th>สถานที่<br>ใช้งาน</th><th>ผู้ใช้</th><th>สถานะ</th><th>QR Code</th>';
   html += '</tr></thead><tbody>';
-  if (!assets.length) html += '<tr><td colspan="12" class="text-center py-8 text-gray-400">ไม่พบข้อมูล</td></tr>';
+  if (!assets.length) html += '<tr><td colspan="13" class="text-center py-8 text-gray-400">ไม่พบข้อมูล</td></tr>';
   assets.forEach(function(a, i) {
     html += '<tr>';
     html += '<td class="text-center">' + (i+1) + '</td>';
@@ -3540,6 +3541,7 @@ function _arBuildList(assets) {
     html += '<td>' + escHtml(a.location||'') + '</td>';
     html += '<td>' + escHtml(a.created_by||'') + '</td>';
     html += '<td>' + _assetStatusLabel(a.status) + '</td>';
+    html += '<td class="text-center"><div id="ar-qr-' + a.id + '" class="ar-qr inline-block"></div></td>';
     html += '</tr>';
   });
   html += '</tbody></table></div>';
@@ -3590,6 +3592,26 @@ function _arBuildSummary(assets) {
   html += _arPrintFooter();
   html += '</div>';
   return html;
+}
+
+function _arRenderQRs() {
+  if (typeof QRCode === 'undefined') return;
+  var assets = _arFiltered();
+  assets.forEach(function(a) {
+    var el = document.getElementById('ar-qr-' + a.id);
+    if (!el) return;
+    el.innerHTML = '';
+    try {
+      new QRCode(el, {
+        text: a.asset_code || a.id,
+        width: 48,
+        height: 48,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    } catch(e) {}
+  });
 }
 
 function _arBuildDisposed(assets) {

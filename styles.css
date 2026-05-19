@@ -190,6 +190,7 @@
 .ar-total td:first-child { border-radius: 0; }
 .ar-print-header { display: none; }
 .ar-print-footer { display: none; }
+.ar-qr img, .ar-qr canvas { width: 48px !important; height: 48px !important; display: block; margin: 0 auto; }
 
 @media print {
   body * { visibility: hidden; }
