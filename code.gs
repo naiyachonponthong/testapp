@@ -117,6 +117,8 @@ function doGet(e) {
         case 'saveAmphoe':            result = saveAmphoe(args[0], args[1]); break;
         case 'deleteAmphoe':          result = deleteAmphoe(args[0], args[1]); break;
         case 'getAssets':             result = getAssets(args[0]); break;
+        case 'getPublicAsset':        result = getPublicAsset(args[0]); break;
+        case 'getPublicAssetDetail':  result = getPublicAssetDetail(args[0]); break;
         case 'saveAsset':             result = saveAsset(args[0], args[1]); break;
         case 'deleteAsset':           result = deleteAsset(args[0], args[1]); break;
         case 'getAssetMaintenance':   result = getAssetMaintenance(args[0]); break;
@@ -1370,6 +1372,29 @@ function getAssets(token) {
     assets.sort(function(a,b){ return (a.asset_code||'').localeCompare(b.asset_code||''); });
     return { success: true, data: assets };
   } catch(err) { logError('getAssets', err); return { success: false, message: err.message }; }
+}
+
+function getPublicAsset(id) {
+  try {
+    var assets = getSheetData('Assets');
+    var asset = assets.find(function(a){ return a.id === id; });
+    if (!asset) return { success: false, message: 'ไม่พบครุภัณฑ์' };
+    return { success: true, data: asset };
+  } catch(err) { logError('getPublicAsset', err); return { success: false, message: err.message }; }
+}
+
+function getPublicAssetDetail(id) {
+  try {
+    var assets = getSheetData('Assets');
+    var asset = assets.find(function(a){ return a.id === id; });
+    if (!asset) return { success: false, message: 'ไม่พบครุภัณฑ์' };
+    var cats = getSheetData('AssetCategories');
+    var types = getSheetData('AssetTypes');
+    var amphoes = getSheetData('Amphoes');
+    var maint = getSheetData('MaintenanceRecords');
+    var assetMaint = maint.filter(function(m){ return m.asset_id === id; });
+    return { success: true, data: { asset: asset, categories: cats, types: types, amphoes: amphoes, maintenance: assetMaint } };
+  } catch(err) { logError('getPublicAssetDetail', err); return { success: false, message: err.message }; }
 }
 
 function saveAsset(token, data) {
