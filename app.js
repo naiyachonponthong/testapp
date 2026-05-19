@@ -184,6 +184,10 @@ function initApp() {
     localStorage.setItem('sup_user', JSON.stringify(AUTH.user));
     showMainShell();
     loadPage('dashboard');
+    // Preload assets for global search
+    if (AUTH.user.role !== 'employee') {
+      _loadAssetsCache();
+    }
     // QR action จาก URL
     if (_QR_ACTION === 'withdraw' && _QR_ITEM_ID) {
       setTimeout(function() { openWithdrawFromQR(_QR_ITEM_ID); }, 800);
@@ -330,6 +334,15 @@ function expandActiveMenuSection(page) {
 
 // ===== GLOBAL SEARCH =====
 var _globalSearchTimer;
+var _assetsCache = [];
+function _loadAssetsCache(callback) {
+  if (_assetsCache.length > 0) { if (callback) callback(); return; }
+  if (!AUTH.token) { if (callback) callback(); return; }
+  callAPI('getAssets', AUTH.token).then(function(res) {
+    _assetsCache = res.data || [];
+    if (callback) callback();
+  }).catch(function() { if (callback) callback(); });
+}
 function debounceGlobalSearch() {
   clearTimeout(_globalSearchTimer);
   _globalSearchTimer = setTimeout(performGlobalSearch, 300);
@@ -339,31 +352,49 @@ function performGlobalSearch() {
   var resultsDiv = document.getElementById('globalSearchResults');
   if (!q || q.length < 2) { resultsDiv.classList.add('hidden'); return; }
   var term = q.toLowerCase();
-  var matches = (_itemsData || []).filter(function(i) {
-    return i.active !== false && (
-      (i.name||'').toLowerCase().includes(term) ||
-      (i.item_code||'').toLowerCase().includes(term) ||
-      (i.category||'').toLowerCase().includes(term)
-    );
-  }).slice(0, 8);
+  var matches = [];
+  // Items
+  (_itemsData || []).forEach(function(i) {
+    if (i.active === false) return;
+    if ((i.name||'').toLowerCase().includes(term) || (i.item_code||'').toLowerCase().includes(term) || (i.category||'').toLowerCase().includes(term)) {
+      matches.push({ type: 'item', id: i.id, name: i.name, code: i.item_code, sub: 'คงเหลือ ' + (i.current_stock||0) + ' ' + (i.unit||''), image: i.image_file_id });
+    }
+  });
+  // Assets
+  (_assetsCache || []).forEach(function(a) {
+    if ((a.asset_code||'').toLowerCase().includes(term) || (a.description||'').toLowerCase().includes(term) || (a.serial_number||'').toLowerCase().includes(term) || (a.gfmis_number||'').toLowerCase().includes(term)) {
+      matches.push({ type: 'asset', id: a.id, name: a.description || a.asset_code, code: a.asset_code, sub: a.serial_number || a.status || '', image: null });
+    }
+  });
+  matches = matches.slice(0, 10);
   if (matches.length === 0) { resultsDiv.classList.add('hidden'); return; }
   var html = '';
-  matches.forEach(function(item) {
-    var img = imgUrl(item.image_file_id);
-    var imgHtml = img ? '<img src="' + img + '" class="w-8 h-8 object-cover rounded-lg border border-gray-200">' : '<div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center"><i class="fi fi-rr-box-open-full text-gray-400 text-xs"></i></div>';
-    html += '<div class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0" onclick="globalSearchGoTo(\'' + item.id + '\')">';
+  matches.forEach(function(m) {
+    var iconClass = m.type === 'asset' ? 'fi fi-rr-box-alt' : 'fi fi-rr-box-open-full';
+    var label = m.type === 'asset' ? 'ครุภัณฑ์' : 'วัสดุ';
+    var imgHtml = m.image ? '<img src="' + imgUrl(m.image) + '" class="w-8 h-8 object-cover rounded-lg border border-gray-200">' : '<div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center"><i class="' + iconClass + ' text-gray-400 text-xs"></i></div>';
+    html += '<div class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0" onclick="globalSearchGoTo(\'' + m.id + '\',\'' + m.type + '\')">';
     html += imgHtml;
-    html += '<div class="flex-1 min-w-0"><p class="text-sm font-medium text-gray-800 truncate">' + escHtml(item.name) + '</p>';
-    html += '<p class="text-xs text-gray-500">' + escHtml(item.item_code) + ' • คงเหลือ ' + item.current_stock + ' ' + escHtml(item.unit) + '</p></div>';
+    html += '<div class="flex-1 min-w-0"><p class="text-sm font-medium text-gray-800 truncate">' + escHtml(m.name) + '</p>';
+    html += '<p class="text-xs text-gray-500">' + escHtml(m.code||'') + ' • ' + escHtml(m.sub) + ' <span class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-medium ' + (m.type==='asset'?'bg-amber-50 text-amber-700':'bg-blue-50 text-blue-700') + '">' + label + '</span></p></div>';
     html += '<i class="fi fi-rr-angle-right text-gray-400 text-xs"></i></div>';
   });
   resultsDiv.innerHTML = html;
   resultsDiv.classList.remove('hidden');
 }
-function globalSearchGoTo(itemId) {
+function globalSearchGoTo(id, type) {
   document.getElementById('globalSearch').value = '';
   document.getElementById('globalSearchResults').classList.add('hidden');
-  showItemDetailModal(itemId);
+  if (type === 'asset') {
+    _loadAssetRefs(function() {
+      callAPI('getAssets', AUTH.token).then(function(res) {
+        _assetData = res.data || [];
+        openAssetDetail(id);
+      }).catch(function() { showError('โหลดข้อมูลครุภัณฑ์ไม่สำเร็จ'); });
+    });
+  } else {
+    showItemDetailModal(id);
+  }
 }
 // ปิด dropdown เมื่อ click นอก
 window.addEventListener('click', function(e) {
