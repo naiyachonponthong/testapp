@@ -1376,8 +1376,12 @@ function saveAsset(token, data) {
   try {
     var session = validateSession(token);
     if (!session || session.role === 'employee') return { success: false, message: 'ไม่มีสิทธิ์' };
+    if (!data.asset_code || !data.description) return { success: false, message: 'กรุณากรอกรหัสครุภัณฑ์และรายการ' };
+    var cats = getSheetData('AssetCategories');
+    var cat = cats.find(function(c){ return c.id === data.category_id; });
+    if (cat && cat.requires_serial === 'true' && !data.serial_number) return { success: false, message: 'ประเภทนี้ต้องกรอกหมายเลขเครื่อง/Serial/License' };
+    if (cat && cat.is_software === 'true' && !data.installed_asset_id) return { success: false, message: 'ซอฟต์แวร์ต้องเลือกครุภัณฑ์ที่ติดตั้ง' };
     if (data.id) {
-      // ตรวจสอบว่ามีอยู่ก่อน
       var existing = getSheetData('Assets').filter(function(a){ return a.id === data.id; });
       if (existing.length > 0) {
         updateInSheet('Assets', data.id, data);

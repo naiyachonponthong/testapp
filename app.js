@@ -2610,11 +2610,13 @@ function buildSettingsPage(cfg) {
   // ===== MASTER DATA: Asset Categories =====
   html += '<div class="card"><div class="card-header flex items-center justify-between"><h3 class="font-semibold text-gray-700 flex items-center gap-2"><i class="fi fi-rr-folder text-navy-600"></i> ประเภทครุภัณฑ์</h3><button onclick="openCatForm()" class="btn-primary btn-sm flex items-center gap-1"><i class="fi fi-rr-plus"></i> เพิ่ม</button></div>';
   html += '<div class="card-body p-0">';
-  html += '<table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-600"><tr><th class="px-4 py-2 text-left">ชื่อ</th><th class="px-4 py-2 text-left hidden sm:table-cell">คำอธิบาย</th><th class="px-4 py-2 text-center">สถานะ</th><th class="px-4 py-2 text-center w-24">จัดการ</th></tr></thead><tbody class="divide-y divide-gray-100">';
-  if (!_settingsCats.length) html += '<tr><td colspan="4" class="text-center py-6 text-gray-400">ไม่มีข้อมูล</td></tr>';
+  html += '<table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-600"><tr><th class="px-4 py-2 text-left">ชื่อ</th><th class="px-4 py-2 text-left hidden sm:table-cell">คำอธิบาย</th><th class="px-4 py-2 text-center">Serial</th><th class="px-4 py-2 text-center">ซอฟต์แวร์</th><th class="px-4 py-2 text-center">สถานะ</th><th class="px-4 py-2 text-center w-24">จัดการ</th></tr></thead><tbody class="divide-y divide-gray-100">';
+  if (!_settingsCats.length) html += '<tr><td colspan="6" class="text-center py-6 text-gray-400">ไม่มีข้อมูล</td></tr>';
   _settingsCats.forEach(function(c){
     html += '<tr><td class="px-4 py-2 font-medium text-gray-800">' + escHtml(c.name) + '</td>';
     html += '<td class="px-4 py-2 text-gray-500 text-xs hidden sm:table-cell">' + escHtml(c.description||'') + '</td>';
+    html += '<td class="px-4 py-2 text-center">' + (c.requires_serial===true?'<span class="text-amber-600 text-xs font-semibold">บังคับ</span>':'<span class="text-gray-300 text-xs">-</span>') + '</td>';
+    html += '<td class="px-4 py-2 text-center">' + (c.is_software===true?'<span class="text-blue-600 text-xs font-semibold">ใช่</span>':'<span class="text-gray-300 text-xs">-</span>') + '</td>';
     html += '<td class="px-4 py-2 text-center"><span class="px-2 py-0.5 rounded-full text-xs ' + (c.is_active!==false?'bg-green-100 text-green-700':'bg-gray-100 text-gray-500') + '">' + (c.is_active!==false?'ใช้งาน':'ปิดใช้งาน') + '</span></td>';
     html += '<td class="px-4 py-2 text-center"><div class="flex gap-1 justify-center"><button onclick="openCatForm(' + JSON.stringify(c).replace(/"/g,'&quot;') + ')" class="w-7 h-7 bg-amber-100 text-amber-700 rounded-lg flex items-center justify-center hover:bg-amber-200"><i class="fi fi-rr-edit text-xs"></i></button><button onclick="deleteCatConfirm(\'' + c.id + '\',\'' + escHtml(c.name).replace(/'/g,"\\'") + '\')" class="w-7 h-7 bg-red-100 text-red-700 rounded-lg flex items-center justify-center hover:bg-red-200"><i class="fi fi-rr-trash text-xs"></i></button></div></td></tr>';
   });
@@ -3006,7 +3008,7 @@ function openAssetForm(id) {
   body += '</div>';
   body += '<div><label class="form-label">รายการ/คำอธิบาย *</label><input type="text" id="aDesc" value="' + escHtml(a?a.description:'') + '" class="form-input"></div>';
   body += '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">';
-  body += '<div><label class="form-label">ประเภทครุภัณฑ์</label><select id="aCategory" class="form-input" onchange="_loadAssetTypes()">';
+  body += '<div><label class="form-label">ประเภทครุภัณฑ์</label><select id="aCategory" class="form-input" onchange="_onAssetCategoryChange()">';
   body += '<option value="">เลือกประเภท</option>';
   _assetCats.forEach(function(c){ body += '<option value="' + c.id + '"' + ((a&&a.category_id===c.id)?' selected':'') + '>' + escHtml(c.name) + '</option>'; });
   body += '</select></div>';
@@ -3014,7 +3016,18 @@ function openAssetForm(id) {
   body += '</div>';
   body += '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">';
   body += '<div><label class="form-label">ยี่ห้อ/รุ่น/ขนาด</label><input type="text" id="aBrand" value="' + escHtml(a?a.brand_model:'') + '" class="form-input"></div>';
-  body += '<div><label class="form-label">หมายเลขเครื่อง</label><input type="text" id="aSerial" value="' + escHtml(a?a.serial_number:'') + '" class="form-input"></div>';
+  body += '<div><label class="form-label" id="aSerialLabel">หมายเลขเครื่อง</label><input type="text" id="aSerial" value="' + escHtml(a?a.serial_number:'') + '" class="form-input"></div>';
+  body += '</div>';
+  body += '<div id="aInstalledWrap" class="hidden">';
+  body += '<div><label class="form-label">ติดตั้งอยู่ที่ครุภัณฑ์</label><select id="aInstalledAsset" class="form-input">';
+  body += '<option value="">เลือกครุภัณฑ์</option>';
+  _assetData.forEach(function(asset){
+    var cat = _assetCats.find(function(x){ return x.id === asset.category_id; });
+    if (cat && cat.is_software !== true && cat.requires_serial === true) {
+      body += '<option value="' + asset.id + '"' + ((a&&a.installed_asset_id===asset.id)?' selected':'') + '>' + escHtml(asset.asset_code||'') + ' - ' + escHtml(asset.description||'') + '</option>';
+    }
+  });
+  body += '</select></div>';
   body += '</div>';
   body += '<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">';
   body += '<div><label class="form-label">วันที่ได้รับ</label><input type="date" id="aReceiveDate" value="' + escHtml(a?a.receive_date:'') + '" class="form-input"></div>';
@@ -3070,6 +3083,16 @@ function _loadAssetTypes() {
   sel.innerHTML = html;
 }
 
+function _onAssetCategoryChange() {
+  _loadAssetTypes();
+  var catId = (document.getElementById('aCategory')||{}).value||'';
+  var cat = _assetCats.find(function(c){ return c.id === catId; });
+  var serialLabel = document.getElementById('aSerialLabel');
+  var installedWrap = document.getElementById('aInstalledWrap');
+  if (serialLabel) serialLabel.textContent = (cat && cat.requires_serial===true) ? 'หมายเลขเครื่อง/Serial/License *' : 'หมายเลขเครื่อง';
+  if (installedWrap) installedWrap.classList.toggle('hidden', !(cat && cat.is_software===true));
+}
+
 function _uploadAssetImage(input) {
   var file = input.files[0];
   if (!file) return;
@@ -3090,6 +3113,7 @@ function _uploadAssetImage(input) {
 }
 
 function _readAssetForm() {
+  var installedAssetEl = document.getElementById('aInstalledAsset');
   return {
     asset_code: (document.getElementById('aAssetCode')||{}).value||'',
     asset_number: (document.getElementById('aAssetNumber')||{}).value||'',
@@ -3107,13 +3131,22 @@ function _readAssetForm() {
     status: (document.getElementById('aStatus')||{}).value||'active',
     fiscal_year: parseInt((document.getElementById('aFiscal')||{}).value||0),
     notes: (document.getElementById('aNotes')||{}).value||'',
-    image_url: _assetImageFileId || ''
+    image_url: _assetImageFileId || '',
+    installed_asset_id: installedAssetEl ? (installedAssetEl.value||'') : ''
   };
+}
+
+function _validateAssetForm(data) {
+  if (!data.asset_code.trim() || !data.description.trim()) { showError('กรุณากรอกรหัสครุภัณฑ์และรายการ'); return false; }
+  var cat = _assetCats.find(function(c){ return c.id === data.category_id; });
+  if (cat && cat.requires_serial===true && !data.serial_number.trim()) { showError('ประเภทนี้ต้องกรอกหมายเลขเครื่อง/Serial/License'); return false; }
+  if (cat && cat.is_software===true && !data.installed_asset_id.trim()) { showError('ซอฟต์แวร์ต้องเลือกครุภัณฑ์ที่ติดตั้ง'); return false; }
+  return true;
 }
 
 function submitAddAsset() {
   var data = _readAssetForm();
-  if (!data.asset_code.trim() || !data.description.trim()) { showError('กรุณากรอกรหัสครุภัณฑ์และรายการ'); return; }
+  if (!_validateAssetForm(data)) return;
   showLoading('กำลังบันทึก...');
   callAPI('saveAsset', AUTH.token, data).then(function(res) {
     hideLoading(); closeModal();
@@ -3123,7 +3156,7 @@ function submitAddAsset() {
 }
 function submitEditAsset(id) {
   var data = _readAssetForm();
-  if (!data.asset_code.trim() || !data.description.trim()) { showError('กรุณากรอกรหัสครุภัณฑ์และรายการ'); return; }
+  if (!_validateAssetForm(data)) return;
   data.id = id;
   showLoading('กำลังบันทึก...');
   callAPI('saveAsset', AUTH.token, data).then(function(res) {
@@ -3735,6 +3768,10 @@ function openCatForm(cat) {
   body += '<input type="hidden" id="catId" value="' + (cat.id||'') + '">';
   body += '<div><label class="form-label">ชื่อประเภทครุภัณฑ์ *</label><input type="text" id="catName" value="' + escHtml(cat.name||'') + '" class="form-input"></div>';
   body += '<div><label class="form-label">คำอธิบาย</label><input type="text" id="catDesc" value="' + escHtml(cat.description||'') + '" class="form-input"></div>';
+  body += '<div class="flex items-center gap-4">';
+  body += '<div class="flex items-center gap-2"><input type="checkbox" id="catRequiresSerial" ' + (cat.requires_serial===true?'checked':'') + ' class="w-4 h-4 rounded accent-navy-700"><label for="catRequiresSerial" class="text-sm text-gray-700">บังคับกรอก Serial/License</label></div>';
+  body += '<div class="flex items-center gap-2"><input type="checkbox" id="catIsSoftware" ' + (cat.is_software===true?'checked':'') + ' class="w-4 h-4 rounded accent-navy-700"><label for="catIsSoftware" class="text-sm text-gray-700">เป็นซอฟต์แวร์</label></div>';
+  body += '</div>';
   body += '<div class="flex items-center gap-2"><input type="checkbox" id="catActive" ' + (cat.is_active!==false?'checked':'') + ' class="w-4 h-4 rounded accent-navy-700"><label for="catActive" class="text-sm text-gray-700">ใช้งาน</label></div>';
   body += '</div>';
   var footer = '<button onclick="closeModal()" class="btn-secondary">ยกเลิก</button>';
@@ -3742,7 +3779,7 @@ function openCatForm(cat) {
   openModal(cat.id ? 'แก้ไขประเภทครุภัณฑ์' : 'เพิ่มประเภทครุภัณฑ์', body, footer);
 }
 function submitCat() {
-  var data = { id: document.getElementById('catId').value, name: document.getElementById('catName').value.trim(), description: document.getElementById('catDesc').value.trim(), is_active: document.getElementById('catActive').checked };
+  var data = { id: document.getElementById('catId').value, name: document.getElementById('catName').value.trim(), description: document.getElementById('catDesc').value.trim(), is_active: document.getElementById('catActive').checked, requires_serial: document.getElementById('catRequiresSerial').checked, is_software: document.getElementById('catIsSoftware').checked };
   if (!data.name) { showError('กรุณากรอกชื่อประเภท'); return; }
   showLoading('กำลังบันทึก...');
   callAPI('saveAssetCategory', AUTH.token, data).then(function(res) {
