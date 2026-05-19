@@ -1612,17 +1612,17 @@ function printSelectedQRLabels() {
   var win = window.open('', '_blank');
   var css = 'body{font-family:sarabun,sans-serif;margin:0;padding:8mm;background:#fff}' +
     '@media print{@page{size:A4;margin:8mm}}' +
-    '.sheet{display:flex;flex-wrap:wrap;gap:4mm;justify-content:flex-start}' +
-    '.label{width:44mm;height:30mm;border:1px solid #ccc;padding:2mm;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;page-break-inside:avoid}' +
-    '.name{font-size:9px;font-weight:700;color:#1a2566;margin:0 0 0.5mm;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
-    '.meta{font-size:7px;color:#666;margin:0 0 1mm}' +
-    '.qr-wrap{width:16mm;height:16mm}';
+    '.sheet{display:flex;flex-wrap:wrap;gap:5mm;justify-content:flex-start}' +
+    '.label{width:50mm;height:40mm;border:1px solid #ccc;padding:3mm;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;page-break-inside:avoid}' +
+    '.name{font-size:10px;font-weight:700;color:#1a2566;margin:0 0 1mm;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+    '.meta{font-size:8px;color:#666;margin:0 0 1.5mm}' +
+    '.qr-wrap{width:22mm;height:22mm}';
 
   var bodyHtml = '<div class="sheet">';
   selected.forEach(function(s) {
     var item = s.data;
     var isAsset = s.type === 'asset';
-    var qrUrl = isAsset ? baseUrl + '?action=asset&id=' + item.id : baseUrl + '?action=withdraw&item_id=' + item.id;
+    var qrUrl = isAsset ? baseUrl + '?public_asset_id=' + item.id : baseUrl + '?action=withdraw&item_id=' + item.id;
     var name = isAsset ? (item.description || item.asset_code) : item.name;
     var code = isAsset ? item.asset_code : item.item_code;
     var extra = isAsset ? '' : (item.size || '');
@@ -1639,9 +1639,9 @@ function printSelectedQRLabels() {
   selected.forEach(function(s) {
     var item = s.data;
     var isAsset = s.type === 'asset';
-    var qrUrl = isAsset ? baseUrl + '?action=asset&id=' + item.id : baseUrl + '?action=withdraw&item_id=' + item.id;
+    var qrUrl = isAsset ? baseUrl + '?public_asset_id=' + item.id : baseUrl + '?action=withdraw&item_id=' + item.id;
     var uid = s.type + '_' + item.id;
-    scriptHtml += 'new QRCode(document.getElementById("qr_' + uid + '"),{text:"' + qrUrl + '",width:60,height:60,colorDark:"#1a2566",correctLevel:QRCode.CorrectLevel.M});';
+    scriptHtml += 'new QRCode(document.getElementById("qr_' + uid + '"),{text:"' + qrUrl + '",width:80,height:80,colorDark:"#1a2566",correctLevel:QRCode.CorrectLevel.M});';
   });
 
   win.document.write('<html><head><title>พิมพ์ QR สติ๊กเกอร์</title><link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">'
@@ -3519,7 +3519,7 @@ function printAssetRegister(id) {
     var cat = cats.find(function(c){ return c.id === a.category_id; });
     var type = types.find(function(t){ return t.id === a.type_id; });
     var amphoe = amphoes.find(function(am){ return am.id === a.amphoe_id; });
-    var orgName = cfg.organization_name || 'สำนักงานพัฒนาชุมชนจังหวัด';
+    var orgName = cfg.app_name || cfg.organization_name || 'ระบบวัสดุสิ้นเปลือง';
     var amphoeShort = amphoe ? amphoe.name : '';
     var logoUrl = cfg.app_logo ? imgUrl(cfg.app_logo) : '';
 
@@ -3726,7 +3726,7 @@ function _buildRegisterHTML(a, cat, type, amphoe, orgName, logoUrl, schedule, us
   });
   html += '</div>';
 
-  html += '<div style="text-align:center;font-size:9px;color:#aaa;margin-top:16px;">กลังบริหารจัดการสินทรัพย์ | สำนักงานพัฒนาชุมชน</div>';
+  html += '<div style="text-align:center;font-size:9px;color:#aaa;margin-top:16px;">' + escHtml(orgName) + '</div>';
   return html;
 }
 
