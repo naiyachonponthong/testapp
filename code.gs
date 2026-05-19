@@ -107,6 +107,9 @@ function doGet(e) {
         case 'getAssetCategories':    result = getAssetCategories(args[0]); break;
         case 'saveAssetCategory':     result = saveAssetCategory(args[0], args[1]); break;
         case 'deleteAssetCategory':   result = deleteAssetCategory(args[0], args[1]); break;
+        case 'getFiscalYears':        result = getFiscalYears(args[0]); break;
+        case 'saveFiscalYear':        result = saveFiscalYear(args[0], args[1]); break;
+        case 'deleteFiscalYear':      result = deleteFiscalYear(args[0], args[1]); break;
         case 'getAssetTypes':         result = getAssetTypes(args[0]); break;
         case 'saveAssetType':         result = saveAssetType(args[0], args[1]); break;
         case 'deleteAssetType':       result = deleteAssetType(args[0], args[1]); break;
@@ -217,7 +220,8 @@ function initializeSheets() {
     'Assets':                 'asset_json',
     'MaintenanceRecords':     'maintenance_json',
     'StatusLogs':             'status_log_json',
-    'Committees':             'committee_json'
+    'Committees':             'committee_json',
+    'FiscalYears':            'fiscal_year_json'
   };
 
   Object.keys(required).forEach(function(name) {
@@ -1261,6 +1265,38 @@ function deleteAssetCategory(token, id) {
     deleteFromSheet('AssetCategories', id, true);
     return { success: true, message: 'ลบสำเร็จ' };
   } catch(err) { logError('deleteAssetCategory', err); return { success: false, message: err.message }; }
+}
+
+// ============================================================
+// FISCAL YEARS
+// ============================================================
+
+function getFiscalYears(token) {
+  try {
+    if (!validateSession(token)) return { success: false, message: 'กรุณาเข้าสู่ระบบใหม่' };
+    var data = getSheetData('FiscalYears');
+    data.sort(function(a,b){ return (b.year||0) - (a.year||0); });
+    return { success: true, data: data };
+  } catch(err) { logError('getFiscalYears', err); return { success: false, message: err.message }; }
+}
+
+function saveFiscalYear(token, data) {
+  try {
+    var session = validateSession(token);
+    if (!session || session.role !== 'admin') return { success: false, message: 'ไม่มีสิทธิ์' };
+    if (!data.id) data.id = Utilities.getUuid();
+    saveToSheet('FiscalYears', data);
+    return { success: true, message: 'บันทึกสำเร็จ' };
+  } catch(err) { logError('saveFiscalYear', err); return { success: false, message: err.message }; }
+}
+
+function deleteFiscalYear(token, id) {
+  try {
+    var session = validateSession(token);
+    if (!session || session.role !== 'admin') return { success: false, message: 'ไม่มีสิทธิ์' };
+    deleteFromSheet('FiscalYears', id, true);
+    return { success: true, message: 'ลบสำเร็จ' };
+  } catch(err) { logError('deleteFiscalYear', err); return { success: false, message: err.message }; }
 }
 
 // ============================================================

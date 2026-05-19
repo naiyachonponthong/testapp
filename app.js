@@ -2542,7 +2542,7 @@ function doToggleUser(userId, name) {
 }
 
 // ===== SETTINGS =====
-var _settingsCats = [], _settingsTypes = [], _settingsAmphoes = [];
+var _settingsCats = [], _settingsTypes = [], _settingsAmphoes = [], _settingsFiscalYears = [];
 
 function renderSettings() {
   if (AUTH.user.role !== 'admin') { loadPage('dashboard'); return; }
@@ -2551,13 +2551,15 @@ function renderSettings() {
     callAPI('getConfig', AUTH.token),
     callAPI('getAssetCategories', AUTH.token),
     callAPI('getAssetTypes', AUTH.token),
-    callAPI('getAmphoes', AUTH.token)
+    callAPI('getAmphoes', AUTH.token),
+    callAPI('getFiscalYears', AUTH.token)
   ]).then(function(res) {
     hideLoading();
     if (!res[0].success) { showError(res[0].message); return; }
     _settingsCats = res[1].data || [];
     _settingsTypes = res[2].data || [];
     _settingsAmphoes = res[3].data || [];
+    _settingsFiscalYears = res[4].data || [];
     buildSettingsPage(res[0].data);
   }).catch(function(){ hideLoading(); showError('โหลดข้อมูลไม่สำเร็จ'); });
 }
@@ -2642,6 +2644,19 @@ function buildSettingsPage(cfg) {
     html += '<td class="px-4 py-2 text-gray-500 text-xs hidden sm:table-cell">' + escHtml(a.code||'') + '</td>';
     html += '<td class="px-4 py-2 text-center"><span class="px-2 py-0.5 rounded-full text-xs ' + (a.is_active!==false?'bg-green-100 text-green-700':'bg-gray-100 text-gray-500') + '">' + (a.is_active!==false?'ใช้งาน':'ปิดใช้งาน') + '</span></td>';
     html += '<td class="px-4 py-2 text-center"><div class="flex gap-1 justify-center"><button onclick="openAmphoeForm(' + JSON.stringify(a).replace(/"/g,'&quot;') + ')" class="w-7 h-7 bg-amber-100 text-amber-700 rounded-lg flex items-center justify-center hover:bg-amber-200"><i class="fi fi-rr-edit text-xs"></i></button><button onclick="deleteAmphoeConfirm(\'' + a.id + '\',\'' + escHtml(a.name).replace(/'/g,"\\'") + '\')" class="w-7 h-7 bg-red-100 text-red-700 rounded-lg flex items-center justify-center hover:bg-red-200"><i class="fi fi-rr-trash text-xs"></i></button></div></td></tr>';
+  });
+  html += '</tbody></table></div></div>';
+
+  // ===== MASTER DATA: Fiscal Years =====
+  html += '<div class="card"><div class="card-header flex items-center justify-between"><h3 class="font-semibold text-gray-700 flex items-center gap-2"><i class="fi fi-rr-calendar text-navy-600"></i> ปีงบประมาณ</h3><button onclick="openFiscalYearForm()" class="btn-primary btn-sm flex items-center gap-1"><i class="fi fi-rr-plus"></i> เพิ่ม</button></div>';
+  html += '<div class="card-body p-0">';
+  html += '<table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-600"><tr><th class="px-4 py-2 text-left">ปี พ.ศ.</th><th class="px-4 py-2 text-left hidden sm:table-cell">ปี ค.ศ.</th><th class="px-4 py-2 text-center">สถานะ</th><th class="px-4 py-2 text-center w-24">จัดการ</th></tr></thead><tbody class="divide-y divide-gray-100">';
+  if (!_settingsFiscalYears.length) html += '<tr><td colspan="4" class="text-center py-6 text-gray-400">ไม่มีข้อมูล</td></tr>';
+  _settingsFiscalYears.forEach(function(f){
+    html += '<tr><td class="px-4 py-2 font-medium text-gray-800">' + escHtml(f.year||'') + '</td>';
+    html += '<td class="px-4 py-2 text-gray-500 text-xs hidden sm:table-cell">' + escHtml(f.year?String(parseInt(f.year)-543):'') + '</td>';
+    html += '<td class="px-4 py-2 text-center"><span class="px-2 py-0.5 rounded-full text-xs ' + (f.is_active!==false?'bg-green-100 text-green-700':'bg-gray-100 text-gray-500') + '">' + (f.is_active!==false?'ใช้งาน':'ปิดใช้งาน') + '</span></td>';
+    html += '<td class="px-4 py-2 text-center"><div class="flex gap-1 justify-center"><button onclick="openFiscalYearForm(' + JSON.stringify(f).replace(/"/g,'&quot;') + ')" class="w-7 h-7 bg-amber-100 text-amber-700 rounded-lg flex items-center justify-center hover:bg-amber-200"><i class="fi fi-rr-edit text-xs"></i></button><button onclick="deleteFiscalYearConfirm(\'' + f.id + '\',\'' + escHtml(String(f.year||'')).replace(/'/g,"\\'") + '\')" class="w-7 h-7 bg-red-100 text-red-700 rounded-lg flex items-center justify-center hover:bg-red-200"><i class="fi fi-rr-trash text-xs"></i></button></div></td></tr>';
   });
   html += '</tbody></table></div></div>';
 
@@ -2810,15 +2825,18 @@ function _getAssetTypeName(id) { var t = _assetTypes.find(function(x){ return x.
 function _getAmphoeName(id) { var a = _amphoes.find(function(x){ return x.id === id; }); return a ? a.name : '-'; }
 function _fmtMoney(n) { return Number(n||0).toLocaleString('th-TH', {maximumFractionDigits:0}) + ' บ.'; }
 
+var _assetFiscalYears = [];
 function _loadAssetRefs(cb) {
   Promise.all([
     callAPI('getAssetCategories', AUTH.token),
     callAPI('getAssetTypes', AUTH.token),
-    callAPI('getAmphoes', AUTH.token)
+    callAPI('getAmphoes', AUTH.token),
+    callAPI('getFiscalYears', AUTH.token)
   ]).then(function(res) {
     _assetCats = res[0].data || [];
     _assetTypes = res[1].data || [];
     _amphoes = res[2].data || [];
+    _assetFiscalYears = res[3].data || [];
     if (cb) cb();
   });
 }
@@ -2830,13 +2848,15 @@ function renderAssets() {
     callAPI('getAssets', AUTH.token),
     callAPI('getAssetCategories', AUTH.token),
     callAPI('getAssetTypes', AUTH.token),
-    callAPI('getAmphoes', AUTH.token)
+    callAPI('getAmphoes', AUTH.token),
+    callAPI('getFiscalYears', AUTH.token)
   ]).then(function(res) {
     hideLoading();
     _assetData = res[0].data || [];
     _assetCats = res[1].data || [];
     _assetTypes = res[2].data || [];
     _amphoes = res[3].data || [];
+    _assetFiscalYears = res[4].data || [];
     _assetPage = 1;
     buildAssetsPage();
   }).catch(function() { hideLoading(); showError('โหลดข้อมูลไม่สำเร็จ'); });
@@ -3007,7 +3027,15 @@ function openAssetForm(id) {
   body += '<option value="">เลือกหน่วยงาน</option>';
   _amphoes.forEach(function(am){ body += '<option value="' + am.id + '"' + ((a&&a.amphoe_id===am.id)?' selected':'') + '>' + escHtml(am.name) + '</option>'; });
   body += '</select></div>';
-  body += '<div><label class="form-label">ปีงบประมาณ</label><input type="number" id="aFiscal" value="' + (a?a.fiscal_year:'') + '" class="form-input"></div>';
+  body += '<div><label class="form-label">ปีงบประมาณ</label><select id="aFiscal" class="form-input">';
+  var currentFy = a ? String(a.fiscal_year||'') : '';
+  var defaultFy = currentFy || String(new Date().getFullYear() + 543);
+  var fyList = _assetFiscalYears.length ? _assetFiscalYears.map(function(f){ return f.year; }) : [defaultFy];
+  fyList.forEach(function(y){
+    if (!y) return;
+    body += '<option value="' + y + '"' + (defaultFy===y?' selected':'') + '>' + y + '</option>';
+  });
+  body += '</select></div>';
   body += '</div>';
   body += '<div><label class="form-label">สถานที่ติดตั้ง/จัดเก็บ</label><input type="text" id="aLocation" value="' + escHtml(a?a.location:'') + '" class="form-input"></div>';
   body += '<div><label class="form-label">สถานะ</label><select id="aStatus" class="form-input">';
@@ -3477,9 +3505,13 @@ function buildAssetReportsPage() {
   html += '<div id="arFilters" class="flex flex-wrap gap-2 items-end bg-white rounded-xl border border-gray-200 p-3">';
   html += '<div class="flex-1 min-w-[140px]"><label class="text-xs text-gray-500 mb-1 block">ปีงบประมาณ</label><select id="arFiscal" onchange="_arUpdateFilter()" class="form-input text-sm">';
   html += '<option value="">ทั้งหมด</option>';
-  var fiscalYears = {};
-  _arAssets.forEach(function(a){ if(a.fiscal_year) fiscalYears[a.fiscal_year]=1; });
-  Object.keys(fiscalYears).sort().reverse().forEach(function(y){ html += '<option value="' + y + '"' + (_arFiscal==y?' selected':'') + '>' + y + '</option>'; });
+  var fyList = _settingsFiscalYears.length ? _settingsFiscalYears.map(function(f){ return f.year; }) : [];
+  if (!fyList.length) {
+    var assetYears = {};
+    _arAssets.forEach(function(a){ if(a.fiscal_year) assetYears[a.fiscal_year]=1; });
+    fyList = Object.keys(assetYears).sort().reverse();
+  }
+  fyList.forEach(function(y){ html += '<option value="' + y + '"' + (_arFiscal==y?' selected':'') + '>' + y + '</option>'; });
   html += '</select></div>';
   html += '<div class="flex-1 min-w-[140px]"><label class="text-xs text-gray-500 mb-1 block">หน่วยงาน</label><select id="arAmphoe" onchange="_arUpdateFilter()" class="form-input text-sm">';
   html += '<option value="all">ทุกหน่วยงาน</option>';
@@ -3647,10 +3679,14 @@ function _arBuildDisposed(assets) {
 function _arPrintHeader(title) {
   var cfg = {};
   try { cfg = JSON.parse(localStorage.getItem('sup_config') || '{}'); } catch(e) {}
-  var org = cfg.organization_name || 'สำนักงานพัฒนาชุมชน';
-  var html = '<div class="ar-print-header text-center py-4 border-b-2 border-gray-800 mb-4">';
-  html += '<h2 class="text-lg font-bold">' + escHtml(title) + '</h2>';
-  html += '<p class="text-sm">' + escHtml(org) + '</p>';
+  var org = cfg.organization_name || '';
+  var appName = cfg.app_name || 'ระบบวัสดุสิ้นเปลือง';
+  var logoUrl = cfg.app_logo ? imgUrl(cfg.app_logo) : '';
+  var html = '<div class="ar-print-header text-center py-3 border-b-2 border-gray-800 mb-3">';
+  if (logoUrl) html += '<img src="' + logoUrl + '" class="ar-header-logo mx-auto mb-1" alt="logo">';
+  html += '<p class="text-xs text-gray-600 font-semibold">' + escHtml(appName) + '</p>';
+  html += '<h2 class="text-base font-bold mt-1">' + escHtml(title) + '</h2>';
+  if (org) html += '<p class="text-sm">' + escHtml(org) + '</p>';
   if (_arFiscal) html += '<p class="text-xs text-gray-600">ประจำปีงบประมาณ พ.ศ. ' + _arFiscal + '</p>';
   html += '</div>';
   return html;
@@ -3788,6 +3824,38 @@ function deleteAmphoeConfirm(id, name) {
   showConfirm('ลบหน่วยงาน', 'ยืนยันลบ "' + name + '" ?', function(){
     showLoading('กำลังลบ...');
     callAPI('deleteAmphoe', AUTH.token, id).then(function(res) {
+      hideLoading();
+      if (res.success) { showSuccess(res.message); renderSettings(); }
+      else showError(res.message);
+    }).catch(function(){ hideLoading(); showError('เกิดข้อผิดพลาด'); });
+  }, 'ลบ');
+}
+
+function openFiscalYearForm(fy) {
+  fy = fy || {};
+  var body = '<div class="space-y-3">';
+  body += '<input type="hidden" id="fyId" value="' + (fy.id||'') + '">';
+  body += '<div><label class="form-label">ปีงบประมาณ (พ.ศ.) *</label><input type="number" id="fyYear" value="' + escHtml(fy.year||'') + '" class="form-input" placeholder="เช่น 2569"></div>';
+  body += '<div class="flex items-center gap-2"><input type="checkbox" id="fyActive" ' + (fy.is_active!==false?'checked':'') + ' class="w-4 h-4 rounded accent-navy-700"><label for="fyActive" class="text-sm text-gray-700">ใช้งาน</label></div>';
+  body += '</div>';
+  var footer = '<button onclick="closeModal()" class="btn-secondary">ยกเลิก</button>';
+  footer += '<button onclick="submitFiscalYear()" class="btn-primary"><i class="fi fi-rr-disk mr-1"></i>บันทึก</button>';
+  openModal(fy.id ? 'แก้ไขปีงบประมาณ' : 'เพิ่มปีงบประมาณ', body, footer);
+}
+function submitFiscalYear() {
+  var data = { id: document.getElementById('fyId').value, year: String(document.getElementById('fyYear').value).trim(), is_active: document.getElementById('fyActive').checked };
+  if (!data.year) { showError('กรุณากรอกปีงบประมาณ'); return; }
+  showLoading('กำลังบันทึก...');
+  callAPI('saveFiscalYear', AUTH.token, data).then(function(res) {
+    hideLoading(); closeModal();
+    if (res.success) { showSuccess(res.message); renderSettings(); }
+    else showError(res.message);
+  }).catch(function(){ hideLoading(); showError('เกิดข้อผิดพลาด'); });
+}
+function deleteFiscalYearConfirm(id, name) {
+  showConfirm('ลบปีงบประมาณ', 'ยืนยันลบ ปี พ.ศ. ' + name + ' ?', function(){
+    showLoading('กำลังลบ...');
+    callAPI('deleteFiscalYear', AUTH.token, id).then(function(res) {
       hideLoading();
       if (res.success) { showSuccess(res.message); renderSettings(); }
       else showError(res.message);
