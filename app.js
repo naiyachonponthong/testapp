@@ -4397,7 +4397,20 @@ function _arPrintFooter() {
 
 // ===== ON LOAD =====
 window.onload = function() {
-  // ดึง config ก่อนเพื่ออัปเดต logo และชื่อระบบ
+  // Parse URL params immediately — before any async call
+  var urlParams = new URLSearchParams(window.location.search);
+  _QR_ACTION = urlParams.get('action') || '';
+  _QR_ITEM_ID = urlParams.get('item_id') || '';
+  _QR_ASSET_ID = urlParams.get('id') || '';
+  _PUBLIC_ASSET_ID = urlParams.get('public_asset_id') || '';
+
+  // If public asset page: render immediately without login
+  if (_PUBLIC_ASSET_ID) {
+    renderPublicAssetPage();
+    return;
+  }
+
+  // Otherwise: fetch config then decide login or app
   callAPI('getConfig').then(function(res) {
     if (res.success && res.data) {
       var cfg = res.data;
@@ -4408,16 +4421,7 @@ window.onload = function() {
       updateLogoDisplay(cfg.app_logo);
     }
   }).catch(function() {}).finally(function() {
-    // Parse URL params for QR / Public
-    var urlParams = new URLSearchParams(window.location.search);
-    _QR_ACTION = urlParams.get('action') || '';
-    _QR_ITEM_ID = urlParams.get('item_id') || '';
-    _QR_ASSET_ID = urlParams.get('id') || '';
-    _PUBLIC_ASSET_ID = urlParams.get('public_asset_id') || '';
-
-    if (_PUBLIC_ASSET_ID) {
-      renderPublicAssetPage();
-    } else if (AUTH.token) { initApp(); }
+    if (AUTH.token) { initApp(); }
     else { showLoginPage(); }
   });
 };
