@@ -3912,6 +3912,7 @@ var _regAssets = [], _regTypes = [], _regCats = [], _regAmphoes = [], _regFiscal
 
 function renderAssetRegister() {
   if (AUTH.user.role === 'employee') { loadPage('dashboard'); return; }
+  _regFiscal = ''; _regAmphoe = 'all'; _regCat = 'all'; _regSearch = '';
   showLoading('โหลดข้อมูล...');
   Promise.all([
     callAPI('getAssets', AUTH.token),
@@ -3926,9 +3927,6 @@ function renderAssetRegister() {
     _regTypes = res[2].data || [];
     _regAmphoes = res[3].data || [];
     var fyData = res[4].data || [];
-    // set default fiscal year to active one
-    var activeFY = fyData.find(function(f){ return f.is_active !== false; });
-    if (!_regFiscal && activeFY) _regFiscal = String(activeFY.year);
     _buildRegisterPage(fyData);
   }).catch(function(){ hideLoading(); showError('โหลดข้อมูลไม่สำเร็จ'); });
 }
