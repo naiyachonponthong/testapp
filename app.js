@@ -2542,13 +2542,23 @@ function doToggleUser(userId, name) {
 }
 
 // ===== SETTINGS =====
+var _settingsCats = [], _settingsTypes = [], _settingsAmphoes = [];
+
 function renderSettings() {
   if (AUTH.user.role !== 'admin') { loadPage('dashboard'); return; }
   showLoading('โหลดการตั้งค่า...');
-  callAPI('getConfig', AUTH.token).then(function(res) {
+  Promise.all([
+    callAPI('getConfig', AUTH.token),
+    callAPI('getAssetCategories', AUTH.token),
+    callAPI('getAssetTypes', AUTH.token),
+    callAPI('getAmphoes', AUTH.token)
+  ]).then(function(res) {
     hideLoading();
-    if (!res.success) { showError(res.message); return; }
-    buildSettingsPage(res.data);
+    if (!res[0].success) { showError(res[0].message); return; }
+    _settingsCats = res[1].data || [];
+    _settingsTypes = res[2].data || [];
+    _settingsAmphoes = res[3].data || [];
+    buildSettingsPage(res[0].data);
   }).catch(function(){ hideLoading(); showError('โหลดข้อมูลไม่สำเร็จ'); });
 }
 
@@ -2594,6 +2604,46 @@ function buildSettingsPage(cfg) {
   html += '<div class="card-body">';
   html += fieldHTML('ระดับสต็อกขั้นต่ำเริ่มต้น', 'cfgLowStock', 'number', cfg.low_stock_threshold||5);
   html += '</div></div>';
+
+  // ===== MASTER DATA: Asset Categories =====
+  html += '<div class="card"><div class="card-header flex items-center justify-between"><h3 class="font-semibold text-gray-700 flex items-center gap-2"><i class="fi fi-rr-folder text-navy-600"></i> ประเภทครุภัณฑ์</h3><button onclick="openCatForm()" class="btn-primary btn-sm flex items-center gap-1"><i class="fi fi-rr-plus"></i> เพิ่ม</button></div>';
+  html += '<div class="card-body p-0">';
+  html += '<table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-600"><tr><th class="px-4 py-2 text-left">ชื่อ</th><th class="px-4 py-2 text-left hidden sm:table-cell">คำอธิบาย</th><th class="px-4 py-2 text-center">สถานะ</th><th class="px-4 py-2 text-center w-24">จัดการ</th></tr></thead><tbody class="divide-y divide-gray-100">';
+  if (!_settingsCats.length) html += '<tr><td colspan="4" class="text-center py-6 text-gray-400">ไม่มีข้อมูล</td></tr>';
+  _settingsCats.forEach(function(c){
+    html += '<tr><td class="px-4 py-2 font-medium text-gray-800">' + escHtml(c.name) + '</td>';
+    html += '<td class="px-4 py-2 text-gray-500 text-xs hidden sm:table-cell">' + escHtml(c.description||'') + '</td>';
+    html += '<td class="px-4 py-2 text-center"><span class="px-2 py-0.5 rounded-full text-xs ' + (c.is_active!==false?'bg-green-100 text-green-700':'bg-gray-100 text-gray-500') + '">' + (c.is_active!==false?'ใช้งาน':'ปิดใช้งาน') + '</span></td>';
+    html += '<td class="px-4 py-2 text-center"><div class="flex gap-1 justify-center"><button onclick="openCatForm(' + JSON.stringify(c).replace(/"/g,'&quot;') + ')" class="w-7 h-7 bg-amber-100 text-amber-700 rounded-lg flex items-center justify-center hover:bg-amber-200"><i class="fi fi-rr-edit text-xs"></i></button><button onclick="deleteCatConfirm(\'' + c.id + '\',\'' + escHtml(c.name).replace(/'/g,"\\'") + '\')" class="w-7 h-7 bg-red-100 text-red-700 rounded-lg flex items-center justify-center hover:bg-red-200"><i class="fi fi-rr-trash text-xs"></i></button></div></td></tr>';
+  });
+  html += '</tbody></table></div></div>';
+
+  // ===== MASTER DATA: Asset Types =====
+  html += '<div class="card"><div class="card-header flex items-center justify-between"><h3 class="font-semibold text-gray-700 flex items-center gap-2"><i class="fi fi-rr-box text-navy-600"></i> ชนิดครุภัณฑ์</h3><button onclick="openTypeForm()" class="btn-primary btn-sm flex items-center gap-1"><i class="fi fi-rr-plus"></i> เพิ่ม</button></div>';
+  html += '<div class="card-body p-0">';
+  html += '<table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-600"><tr><th class="px-4 py-2 text-left">ชื่อ</th><th class="px-4 py-2 text-left hidden sm:table-cell">ประเภท</th><th class="px-4 py-2 text-center">สถานะ</th><th class="px-4 py-2 text-center w-24">จัดการ</th></tr></thead><tbody class="divide-y divide-gray-100">';
+  if (!_settingsTypes.length) html += '<tr><td colspan="4" class="text-center py-6 text-gray-400">ไม่มีข้อมูล</td></tr>';
+  _settingsTypes.forEach(function(t){
+    var cat = _settingsCats.find(function(x){ return x.id === t.category_id; });
+    html += '<tr><td class="px-4 py-2 font-medium text-gray-800">' + escHtml(t.name) + '</td>';
+    html += '<td class="px-4 py-2 text-gray-500 text-xs hidden sm:table-cell">' + escHtml(cat?cat.name:'-') + '</td>';
+    html += '<td class="px-4 py-2 text-center"><span class="px-2 py-0.5 rounded-full text-xs ' + (t.is_active!==false?'bg-green-100 text-green-700':'bg-gray-100 text-gray-500') + '">' + (t.is_active!==false?'ใช้งาน':'ปิดใช้งาน') + '</span></td>';
+    html += '<td class="px-4 py-2 text-center"><div class="flex gap-1 justify-center"><button onclick="openTypeForm(' + JSON.stringify(t).replace(/"/g,'&quot;') + ')" class="w-7 h-7 bg-amber-100 text-amber-700 rounded-lg flex items-center justify-center hover:bg-amber-200"><i class="fi fi-rr-edit text-xs"></i></button><button onclick="deleteTypeConfirm(\'' + t.id + '\',\'' + escHtml(t.name).replace(/'/g,"\\'") + '\')" class="w-7 h-7 bg-red-100 text-red-700 rounded-lg flex items-center justify-center hover:bg-red-200"><i class="fi fi-rr-trash text-xs"></i></button></div></td></tr>';
+  });
+  html += '</tbody></table></div></div>';
+
+  // ===== MASTER DATA: Amphoes =====
+  html += '<div class="card"><div class="card-header flex items-center justify-between"><h3 class="font-semibold text-gray-700 flex items-center gap-2"><i class="fi fi-rr-building text-navy-600"></i> หน่วยงาน</h3><button onclick="openAmphoeForm()" class="btn-primary btn-sm flex items-center gap-1"><i class="fi fi-rr-plus"></i> เพิ่ม</button></div>';
+  html += '<div class="card-body p-0">';
+  html += '<table class="w-full text-sm"><thead class="bg-gray-50 text-xs text-gray-600"><tr><th class="px-4 py-2 text-left">ชื่อ</th><th class="px-4 py-2 text-left hidden sm:table-cell">รหัส</th><th class="px-4 py-2 text-center">สถานะ</th><th class="px-4 py-2 text-center w-24">จัดการ</th></tr></thead><tbody class="divide-y divide-gray-100">';
+  if (!_settingsAmphoes.length) html += '<tr><td colspan="4" class="text-center py-6 text-gray-400">ไม่มีข้อมูล</td></tr>';
+  _settingsAmphoes.forEach(function(a){
+    html += '<tr><td class="px-4 py-2 font-medium text-gray-800">' + escHtml(a.name) + '</td>';
+    html += '<td class="px-4 py-2 text-gray-500 text-xs hidden sm:table-cell">' + escHtml(a.code||'') + '</td>';
+    html += '<td class="px-4 py-2 text-center"><span class="px-2 py-0.5 rounded-full text-xs ' + (a.is_active!==false?'bg-green-100 text-green-700':'bg-gray-100 text-gray-500') + '">' + (a.is_active!==false?'ใช้งาน':'ปิดใช้งาน') + '</span></td>';
+    html += '<td class="px-4 py-2 text-center"><div class="flex gap-1 justify-center"><button onclick="openAmphoeForm(' + JSON.stringify(a).replace(/"/g,'&quot;') + ')" class="w-7 h-7 bg-amber-100 text-amber-700 rounded-lg flex items-center justify-center hover:bg-amber-200"><i class="fi fi-rr-edit text-xs"></i></button><button onclick="deleteAmphoeConfirm(\'' + a.id + '\',\'' + escHtml(a.name).replace(/'/g,"\\'") + '\')" class="w-7 h-7 bg-red-100 text-red-700 rounded-lg flex items-center justify-center hover:bg-red-200"><i class="fi fi-rr-trash text-xs"></i></button></div></td></tr>';
+  });
+  html += '</tbody></table></div></div>';
 
   html += '<div class="flex justify-end gap-3">';
   html += '<button onclick="renderSettings()" class="btn-secondary"><i class="fi fi-rr-refresh mr-1"></i>รีเซ็ต</button>';
@@ -3503,4 +3553,107 @@ window.onload = function() {
     else { showLoginPage(); }
   });
 };
+
+// ===== MASTER DATA CRUD (Settings) =====
+function openCatForm(cat) {
+  cat = cat || {};
+  var body = '<div class="space-y-3">';
+  body += '<input type="hidden" id="catId" value="' + (cat.id||'') + '">';
+  body += '<div><label class="form-label">ชื่อประเภทครุภัณฑ์ *</label><input type="text" id="catName" value="' + escHtml(cat.name||'') + '" class="form-input"></div>';
+  body += '<div><label class="form-label">คำอธิบาย</label><input type="text" id="catDesc" value="' + escHtml(cat.description||'') + '" class="form-input"></div>';
+  body += '<div class="flex items-center gap-2"><input type="checkbox" id="catActive" ' + (cat.is_active!==false?'checked':'') + ' class="w-4 h-4 rounded accent-navy-700"><label for="catActive" class="text-sm text-gray-700">ใช้งาน</label></div>';
+  body += '</div>';
+  var footer = '<button onclick="closeModal()" class="btn-secondary">ยกเลิก</button>';
+  footer += '<button onclick="submitCat()" class="btn-primary"><i class="fi fi-rr-disk mr-1"></i>บันทึก</button>';
+  openModal(cat.id ? 'แก้ไขประเภทครุภัณฑ์' : 'เพิ่มประเภทครุภัณฑ์', body, footer);
+}
+function submitCat() {
+  var data = { id: document.getElementById('catId').value, name: document.getElementById('catName').value.trim(), description: document.getElementById('catDesc').value.trim(), is_active: document.getElementById('catActive').checked };
+  if (!data.name) { showError('กรุณากรอกชื่อประเภท'); return; }
+  showLoading('กำลังบันทึก...');
+  callAPI('saveAssetCategory', AUTH.token, data).then(function(res) {
+    hideLoading(); closeModal();
+    if (res.success) { showSuccess(res.message); renderSettings(); }
+    else showError(res.message);
+  }).catch(function(){ hideLoading(); showError('เกิดข้อผิดพลาด'); });
+}
+function deleteCatConfirm(id, name) {
+  showConfirm('ลบประเภทครุภัณฑ์', 'ยืนยันลบ "' + name + '" ?', function(){
+    showLoading('กำลังลบ...');
+    callAPI('deleteAssetCategory', AUTH.token, id).then(function(res) {
+      hideLoading();
+      if (res.success) { showSuccess(res.message); renderSettings(); }
+      else showError(res.message);
+    }).catch(function(){ hideLoading(); showError('เกิดข้อผิดพลาด'); });
+  }, 'ลบ');
+}
+
+function openTypeForm(type) {
+  type = type || {};
+  var body = '<div class="space-y-3">';
+  body += '<input type="hidden" id="typeId" value="' + (type.id||'') + '">';
+  body += '<div><label class="form-label">ชื่อชนิดครุภัณฑ์ *</label><input type="text" id="typeName" value="' + escHtml(type.name||'') + '" class="form-input"></div>';
+  body += '<div><label class="form-label">ประเภทครุภัณฑ์ *</label><select id="typeCatId" class="form-input">';
+  body += '<option value="">เลือกประเภท</option>';
+  _settingsCats.forEach(function(c){ body += '<option value="' + c.id + '"' + ((type.category_id===c.id)?' selected':'') + '>' + escHtml(c.name) + '</option>'; });
+  body += '</select></div>';
+  body += '<div class="flex items-center gap-2"><input type="checkbox" id="typeActive" ' + (type.is_active!==false?'checked':'') + ' class="w-4 h-4 rounded accent-navy-700"><label for="typeActive" class="text-sm text-gray-700">ใช้งาน</label></div>';
+  body += '</div>';
+  var footer = '<button onclick="closeModal()" class="btn-secondary">ยกเลิก</button>';
+  footer += '<button onclick="submitType()" class="btn-primary"><i class="fi fi-rr-disk mr-1"></i>บันทึก</button>';
+  openModal(type.id ? 'แก้ไขชนิดครุภัณฑ์' : 'เพิ่มชนิดครุภัณฑ์', body, footer);
+}
+function submitType() {
+  var data = { id: document.getElementById('typeId').value, name: document.getElementById('typeName').value.trim(), category_id: document.getElementById('typeCatId').value, is_active: document.getElementById('typeActive').checked };
+  if (!data.name || !data.category_id) { showError('กรุณากรอกชื่อและเลือกประเภท'); return; }
+  showLoading('กำลังบันทึก...');
+  callAPI('saveAssetType', AUTH.token, data).then(function(res) {
+    hideLoading(); closeModal();
+    if (res.success) { showSuccess(res.message); renderSettings(); }
+    else showError(res.message);
+  }).catch(function(){ hideLoading(); showError('เกิดข้อผิดพลาด'); });
+}
+function deleteTypeConfirm(id, name) {
+  showConfirm('ลบชนิดครุภัณฑ์', 'ยืนยันลบ "' + name + '" ?', function(){
+    showLoading('กำลังลบ...');
+    callAPI('deleteAssetType', AUTH.token, id).then(function(res) {
+      hideLoading();
+      if (res.success) { showSuccess(res.message); renderSettings(); }
+      else showError(res.message);
+    }).catch(function(){ hideLoading(); showError('เกิดข้อผิดพลาด'); });
+  }, 'ลบ');
+}
+
+function openAmphoeForm(am) {
+  am = am || {};
+  var body = '<div class="space-y-3">';
+  body += '<input type="hidden" id="amphoeId" value="' + (am.id||'') + '">';
+  body += '<div><label class="form-label">ชื่อหน่วยงาน *</label><input type="text" id="amphoeName" value="' + escHtml(am.name||'') + '" class="form-input"></div>';
+  body += '<div><label class="form-label">รหัสหน่วยงาน</label><input type="text" id="amphoeCode" value="' + escHtml(am.code||'') + '" class="form-input"></div>';
+  body += '<div class="flex items-center gap-2"><input type="checkbox" id="amphoeActive" ' + (am.is_active!==false?'checked':'') + ' class="w-4 h-4 rounded accent-navy-700"><label for="amphoeActive" class="text-sm text-gray-700">ใช้งาน</label></div>';
+  body += '</div>';
+  var footer = '<button onclick="closeModal()" class="btn-secondary">ยกเลิก</button>';
+  footer += '<button onclick="submitAmphoe()" class="btn-primary"><i class="fi fi-rr-disk mr-1"></i>บันทึก</button>';
+  openModal(am.id ? 'แก้ไขหน่วยงาน' : 'เพิ่มหน่วยงาน', body, footer);
+}
+function submitAmphoe() {
+  var data = { id: document.getElementById('amphoeId').value, name: document.getElementById('amphoeName').value.trim(), code: document.getElementById('amphoeCode').value.trim(), is_active: document.getElementById('amphoeActive').checked };
+  if (!data.name) { showError('กรุณากรอกชื่อหน่วยงาน'); return; }
+  showLoading('กำลังบันทึก...');
+  callAPI('saveAmphoe', AUTH.token, data).then(function(res) {
+    hideLoading(); closeModal();
+    if (res.success) { showSuccess(res.message); renderSettings(); }
+    else showError(res.message);
+  }).catch(function(){ hideLoading(); showError('เกิดข้อผิดพลาด'); });
+}
+function deleteAmphoeConfirm(id, name) {
+  showConfirm('ลบหน่วยงาน', 'ยืนยันลบ "' + name + '" ?', function(){
+    showLoading('กำลังลบ...');
+    callAPI('deleteAmphoe', AUTH.token, id).then(function(res) {
+      hideLoading();
+      if (res.success) { showSuccess(res.message); renderSettings(); }
+      else showError(res.message);
+    }).catch(function(){ hideLoading(); showError('เกิดข้อผิดพลาด'); });
+  }, 'ลบ');
+}
 
