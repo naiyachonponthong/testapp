@@ -3198,19 +3198,13 @@ function printAssetQR(id) {
 
 // ===== PUBLIC ASSET DETAIL (NO LOGIN) =====
 function renderPublicAssetPage() {
-  var _h = function(id){ var el=document.getElementById(id); if(el) el.classList.add('hidden'); };
   var _s = function(id,prop,val){ var el=document.getElementById(id); if(el) el.style[prop]=val; };
-  var _rc = function(id,cls){ var el=document.getElementById(id); if(el) el.classList.remove(cls); };
-  _h('loginPage');
-  _rc('mainShell','hidden');
+  var el = document.getElementById('loginPage'); if(el) el.classList.add('hidden');
+  var ms = document.getElementById('mainShell'); if(ms) ms.classList.remove('hidden');
   _s('sidebar','display','none');
-  // hide topbar if it has an id, otherwise hide by tag inside mainShell
-  (function(){
-    var tb = document.querySelector('#mainShell header') || document.querySelector('#mainShell nav') || document.getElementById('topbar');
-    if (tb) tb.style.display = 'none';
-  })();
+  _s('topbar','display','none');
   var mc = document.getElementById('mainContent');
-  if (mc) { mc.classList.remove('lg:ml-64'); mc.style.marginLeft = '0'; }
+  if (mc) { mc.classList.remove('lg:ml-64'); mc.style.cssText += ';margin-left:0 !important'; }
 
   showLoading('กำลังโหลดข้อมูล...');
   Promise.all([
