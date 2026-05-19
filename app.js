@@ -3413,6 +3413,7 @@ function _openRegisterModal(a, cat, type, amphoe, orgName, logoUrl, schedule, us
     'body{font-family:sarabun,sans-serif;margin:0;padding:0;background:#fff;color:#000;font-size:10px;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
     '*{box-sizing:border-box;word-break:break-word;overflow-wrap:break-word}' +
     '.print-wrap{padding:14mm 16mm;width:100%;max-width:100%}' +
+    '.print-wrap div[style*="display:flex"]{display:flex !important}' +
     'table{border-collapse:collapse;width:100%;table-layout:fixed}' +
     'th,td{border:1px solid #999;padding:2px 3px;font-size:9px;word-break:break-word;overflow-wrap:break-word;vertical-align:top;overflow:hidden}' +
     'th{background:#f3f4f6 !important;text-align:center;font-weight:600}' +
@@ -3458,26 +3459,29 @@ function _buildRegisterHTML(a, cat, type, amphoe, orgName, logoUrl, schedule, us
 
   var html = '';
 
-  // ── Header: 3-column table layout — org | title | QR ──
-  html += '<table style="width:100%;border:none;margin-bottom:14px;"><tr>';
-  // Left: org
-  html += '<td style="width:33%;border:none;vertical-align:middle;padding:0 8px 0 0;">';
-  if (logoUrl) html += '<img src="' + logoUrl + '" style="width:44px;height:44px;object-fit:contain;display:block;margin-bottom:3px;">';
+  // ── Header: flex 3-column — org | title | QR ──
+  html += '<div style="display:flex;align-items:center;width:100%;margin-bottom:14px;gap:0;">';
+  // Left: org (flex: 1)
+  html += '<div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;">';
+  if (logoUrl) html += '<img src="' + logoUrl + '" style="width:44px;height:44px;object-fit:contain;flex-shrink:0;">';
+  html += '<div style="min-width:0;">';
   html += '<div style="font-weight:700;font-size:13px;line-height:1.4;">' + escHtml(orgName) + '</div>';
   html += '<div style="font-size:11px;color:#555;">' + escHtml(amphoe ? amphoe.name : '') + '</div>';
-  html += '</td>';
-  // Center: title
-  html += '<td style="width:34%;border:none;vertical-align:middle;text-align:center;padding:0 4px;">';
-  html += '<div style="font-size:18px;font-weight:700;">ทะเบียนคุมสินทรัพย์รายตัว</div>';
-  html += '</td>';
-  // Right: QR
-  html += '<td style="width:33%;border:none;vertical-align:middle;text-align:right;padding:0 0 0 8px;">';
+  html += '</div></div>';
+  // Center: title (flex: 0 auto — takes exactly what it needs, centered via margin)
+  html += '<div style="flex:1;text-align:center;">';
+  html += '<div style="font-size:18px;font-weight:700;white-space:nowrap;">ทะเบียนคุมสินทรัพย์รายตัว</div>';
+  html += '</div>';
+  // Right: QR (flex: 1, right-align)
+  html += '<div style="flex:1;display:flex;justify-content:flex-end;align-items:center;">';
   if (qrDataUrl) {
-    html += '<img src="' + qrDataUrl + '" style="width:80px;height:80px;display:inline-block;">';
+    html += '<div style="text-align:center;">';
+    html += '<img src="' + qrDataUrl + '" style="width:80px;height:80px;display:block;">';
     html += '<div style="font-size:9px;color:#888;margin-top:2px;">สแกนดูรายละเอียด</div>';
+    html += '</div>';
   }
-  html += '</td>';
-  html += '</tr></table>';
+  html += '</div>';
+  html += '</div>';
 
   // ── Info table: 5 columns, 3 rows ──
   // Row 1: 5 cells
