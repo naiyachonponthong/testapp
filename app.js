@@ -262,7 +262,7 @@ function loadPage(page) {
     transactions:'ประวัติเคลื่อนไหว', reports:'รายงาน',
     users:'จัดการผู้ใช้งาน', settings:'ตั้งค่าระบบ', profile:'โปรไฟล์',
     assets:'ทะเบียนครุภัณฑ์', assetstatus:'อัปเดตสถานภาพ', assetmaintenance:'ซ่อมบำรุง',
-    assetcommittees:'คณะกรรมการ', assetreports:'รายงานครุภัณฑ์', depreciation:'ค่าเสื่อม/อายุใช้งาน', assetregister:'ทะเบียนคุมสินทรัพย์'
+    assetcommittees:'คณะกรรมการ', assetreports:'รายงานครุภัณฑ์', depreciation:'ค่าเสื่อม/อายุใช้งาน', assetregister:'ทะเบียนคุมสินทรัพย์', manual:'คู่มือการใช้งาน'
   };
   document.getElementById('pageTitle').textContent = titles[page] || page;
   document.getElementById('pageBreadcrumb').textContent = 'ระบบวัสดุสิ้นเปลือง / ' + (titles[page] || page);
@@ -291,6 +291,7 @@ function loadPage(page) {
   else if (page === 'assetreports')       renderAssetReports();
   else if (page === 'depreciation')       renderDepreciation();
   else if (page === 'assetregister')        renderAssetRegister();
+  else if (page === 'manual')               renderManual();
 }
 
 function toggleSidebar() {
@@ -316,6 +317,98 @@ function initMenuSections() {
   });
 }
 
+function renderManual() {
+  var html = '<div class="fade-in max-w-4xl mx-auto space-y-6">';
+  html += '<div class="card"><div class="card-header"><h3 class="font-semibold text-gray-700 text-sm flex items-center gap-2"><i class="fi fi-rr-book text-navy-600"></i> คู่มือการใช้งานระบบวัสดุสิ้นเปลือง</h3></div>';
+  html += '<div class="card-body space-y-6 text-sm text-gray-700">';
+
+  // Section 1: Login
+  html += '<div><h4 class="font-bold text-navy-700 text-base mb-2">1. การเข้าสู่ระบบ</h4>';
+  html += '<ul class="list-disc list-inside space-y-1 ml-2">';
+  html += '<li>เลือกบทบาท: <b>ผู้ดูแลระบบ</b> / <b>เจ้าหน้าที่</b> / <b>พนักงาน</b></li>';
+  html += '<li>กรอกชื่อผู้ใช้งานและรหัสผ่าน</li>';
+  html += '<li>กดปุ่ม "เข้าสู่ระบบ"</li>';
+  html += '</ul></div>';
+
+  // Section 2: Dashboard
+  html += '<div><h4 class="font-bold text-navy-700 text-base mb-2">2. ภาพรวมระบบ (Dashboard)</h4>';
+  html += '<ul class="list-disc list-inside space-y-1 ml-2">';
+  html += '<li>แสดงจำนวนรายการวัสดุ สต็อกต่ำ/หมด รออนุมัติ และเคลื่อนไหววันนี้</li>';
+  html += '<li>ดูกราฟสถิติรับ-เบิก 6 เดือนล่าสุด</li>';
+  html += '<li>ดูวัสดุใกล้หมดสต็อกแบบ real-time</li>';
+  html += '</ul></div>';
+
+  // Section 3: Items
+  html += '<div><h4 class="font-bold text-navy-700 text-base mb-2">3. จัดการรายการวัสดุ</h4>';
+  html += '<ul class="list-disc list-inside space-y-1 ml-2">';
+  html += '<li><b>เพิ่มวัสดุ:</b> กรอกชื่อ รหัส หมวดหมู่ หน่วยนับ จำนวนขั้นต่ำ และราคา</li>';
+  html += '<li><b>แก้ไข/ลบ:</b> คลิกไอคอนดินสอหรือถังขยะในตาราง</li>';
+  html += '<li><b>อัปโหลดรูป:</b> กด "เลือกรูป" ในฟอร์มเพิ่ม/แก้ไข</li>';
+  html += '<li><b>QR Code:</b> กดปุ่ม QR เพื่อสแกนเบิกวัสดุ</li>';
+  html += '</ul></div>';
+
+  // Section 4: Stock & Receive
+  html += '<div><h4 class="font-bold text-navy-700 text-base mb-2">4. รับวัสดุเข้าคลัง</h4>';
+  html += '<ul class="list-disc list-inside space-y-1 ml-2">';
+  html += '<li>เลือกวัสดุ → กรอกจำนวนรับเข้า → ระบุผู้รับ/เลขที่เอกสาร</li>';
+  html += '<li>ระบบจะบันทึกประวัติและเพิ่มจำนวนสต็อกอัตโนมัติ</li>';
+  html += '</ul></div>';
+
+  // Section 5: Withdraw
+  html += '<div><h4 class="font-bold text-navy-700 text-base mb-2">5. เบิกวัสดุ</h4>';
+  html += '<ul class="list-disc list-inside space-y-1 ml-2">';
+  html += '<li>ค้นหาวัสดุ → กรอกจำนวนที่ต้องการเบิก</li>';
+  html += '<li>เลือกผู้รับ / ระบุหน่วยงาน</li>';
+  html += '<li>ส่งคำขอเบิก → รอผู้ดูแลระบบอนุมัติ</li>';
+  html += '</ul></div>';
+
+  // Section 6: Approve
+  html += '<div><h4 class="font-bold text-navy-700 text-base mb-2">6. อนุมัติการเบิก (เฉพาะผู้ดูแลระบบ)</h4>';
+  html += '<ul class="list-disc list-inside space-y-1 ml-2">';
+  html += '<li>เข้าเมนู "อนุมัติการเบิก" เพื่อดูรายการรออนุมัติ</li>';
+  html += '<li>กด <span class="text-green-600 font-bold">\u2713</span> เพื่ออนุมัติ หรือ <span class="text-red-600 font-bold">\u2717</span> เพื่อปฏิเสธ</li>';
+  html += '<li>ระบบจะหักจำนวนสต็อกอัตโนมัติเมื่ออนุมัติ</li>';
+  html += '</ul></div>';
+
+  // Section 7: Assets
+  html += '<div><h4 class="font-bold text-navy-700 text-base mb-2">7. ทะเบียนครุภัณฑ์</h4>';
+  html += '<ul class="list-disc list-inside space-y-1 ml-2">';
+  html += '<li><b>เพิ่มครุภัณฑ์:</b> กรอกรหัส ชื่อ ประเภท หน่วยงาน ราคา วันที่รับ</li>';
+  html += '<li><b>อัปเดตสถานภาพ:</b> เปลี่ยนสถานะเป็น ใช้งาน/ชำรุด/จำหน่าย</li>';
+  html += '<li><b>ซ่อมบำรุง:</b> บันทึกประวัติการซ่อมและค่าใช้จ่าย</li>';
+  html += '<li><b>ค่าเสื่อม:</b> ดูตารางค่าเสื่อมราคาแบบอัตโนมัติ</li>';
+  html += '<li><b>ทะเบียนคุมฯ:</b> พิมพ์แบบฟอร์มทะเบียนคุมสินทรัพย์รายตัวพร้อม QR</li>';
+  html += '</ul></div>';
+
+  // Section 8: Reports
+  html += '<div><h4 class="font-bold text-navy-700 text-base mb-2">8. รายงาน</h4>';
+  html += '<ul class="list-disc list-inside space-y-1 ml-2">';
+  html += '<li>รายงานการตรวจสอบพัสดุประจำปีงบประมาณ</li>';
+  html += '<li>รายงานการเบิก-รับ แยกตามหมวดหมู่/เดือน</li>';
+  html += '<li>สามารถพิมพ์เป็น PDF หรือ Excel ได้</li>';
+  html += '</ul></div>';
+
+  // Section 9: Settings
+  html += '<div><h4 class="font-bold text-navy-700 text-base mb-2">9. ตั้งค่าระบบ</h4>';
+  html += '<ul class="list-disc list-inside space-y-1 ml-2">';
+  html += '<li><b>ข้อมูลองค์กร:</b> ชื่อระบบ โลโก้ ชื่อองค์กร</li>';
+  html += '<li><b>ผู้ใช้งาน:</b> เพิ่ม/แก้ไข/ลบ ผู้ใช้และสิทธิ์</li>';
+  html += '<li><b>หมวดหมู่:</b> จัดการหมวดหมู่วัสดุและครุภัณฑ์</li>';
+  html += '</ul></div>';
+
+  // Section 10: Tips
+  html += '<div><h4 class="font-bold text-navy-700 text-base mb-2">10. เคล็ดลับการใช้งาน</h4>';
+  html += '<ul class="list-disc list-inside space-y-1 ml-2">';
+  html += '<li>ใช้ช่อง "ค้นหาเร็ว" บนแถบด้านบนเพื่อหาวัสดุหรือครุภัณฑ์ทันที</li>';
+  html += '<li>สแกน QR Code บนวัสดุเพื่อเบิกได้โดยไม่ต้องค้นหา</li>';
+  html += '<li>ข้อมูลสต็อกอัปเดต real-time ทุกครั้งที่มีการรับ/เบิก</li>';
+  html += '<li>รหัสผ่านสามารถขอรีเซ็ตผ่าน "ลืมรหัสผ่าน" บนหน้า Login</li>';
+  html += '</ul></div>';
+
+  html += '</div></div></div>';
+  document.getElementById('mainContent').innerHTML = html;
+}
+
 function expandActiveMenuSection(page) {
   var map = {
     dashboard: 'main', stock: 'main',
@@ -324,7 +417,7 @@ function expandActiveMenuSection(page) {
     reports: 'report',
     assets: 'asset', assetstatus: 'asset', assetmaintenance: 'asset', assetcommittees: 'asset', depreciation: 'asset', assetregister: 'asset',
     assetreports: 'assetreport',
-    users: 'admin', settings: 'admin'
+    users: 'admin', settings: 'admin', manual: 'manual'
   };
   var section = map[page];
   if (!section) return;
