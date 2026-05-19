@@ -3458,23 +3458,21 @@ function _buildRegisterHTML(a, cat, type, amphoe, orgName, logoUrl, schedule, us
 
   var html = '';
 
-  // ── Header: title on its own centered row, org+QR on row below ──
-  // Row 1: full-width centered title
-  html += '<div style="text-align:center;margin-bottom:6px;">';
-  html += '<div style="font-size:18px;font-weight:700;">ทะเบียนคุมสินทรัพย์รายตัว</div>';
-  html += '</div>';
-  // Row 2: org left, QR right
-  html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;">';
-  html += '<div style="display:flex;align-items:center;gap:8px;">';
-  if (logoUrl) html += '<img src="' + logoUrl + '" style="width:46px;height:46px;object-fit:contain;flex-shrink:0;">';
-  html += '<div><div style="font-weight:700;font-size:13px;line-height:1.4;">' + escHtml(orgName) + '</div>';
-  html += '<div style="font-size:11px;color:#555;">' + escHtml(amphoe ? amphoe.name : '') + '</div></div>';
-  html += '</div>';
-  html += '<div style="text-align:right;">';
+  // ── Header: org+title centered, QR top-right corner ──
+  html += '<div style="position:relative;margin-bottom:14px;">';
+  // QR pinned to top-right
   if (qrDataUrl) {
-    html += '<img src="' + qrDataUrl + '" style="width:80px;height:80px;display:inline-block;">';
+    html += '<div style="position:absolute;top:0;right:0;text-align:center;">';
+    html += '<img src="' + qrDataUrl + '" style="width:80px;height:80px;display:block;">';
     html += '<div style="font-size:9px;color:#888;margin-top:2px;">สแกนดูรายละเอียด</div>';
+    html += '</div>';
   }
+  // Center block: logo + org name + title
+  html += '<div style="text-align:center;padding-right:' + (qrDataUrl ? '96px' : '0') + ';">';
+  if (logoUrl) html += '<img src="' + logoUrl + '" style="width:50px;height:50px;object-fit:contain;display:inline-block;margin-bottom:4px;">';
+  html += '<div style="font-weight:700;font-size:14px;line-height:1.4;">' + escHtml(orgName) + '</div>';
+  html += '<div style="font-size:11px;color:#555;margin-bottom:6px;">' + escHtml(amphoe ? amphoe.name : '') + '</div>';
+  html += '<div style="font-size:18px;font-weight:700;">ทะเบียนคุมสินทรัพย์รายตัว</div>';
   html += '</div>';
   html += '</div>';
 
