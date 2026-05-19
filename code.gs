@@ -827,7 +827,7 @@ function rejectWithdrawal(token, wdId, reason) {
       reject_reason: reason || ''
     });
     sendTelegram('<b>ปฏิเสธการเบิก</b> #' + wd.withdraw_no
-      + '\nรายการ: ' + wd.item_name
+      + '\nรายการ: ' + (wd.item_name || wd.item_code || '-')
       + '\nผู้ขอ: ' + wd.requested_by_name
       + '\nเหตุผล: ' + (reason || '-')
       + '\nโดย: ' + session.name);
@@ -859,7 +859,7 @@ function cancelWithdrawal(token, wdId) {
       approved_at: new Date().toISOString()
     });
     sendTelegram('<b>ยกเลิกการเบิก</b> #' + wd.withdraw_no
-      + '\nรายการ: ' + wd.item_name
+      + '\nรายการ: ' + (wd.item_name || wd.item_code || '-')
       + '\nผู้ขอ: ' + wd.requested_by_name
       + '\nโดย: ' + session.name);
     return { success: true, message: 'ยกเลิกคำขอเรียบร้อย' };
