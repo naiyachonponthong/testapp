@@ -203,19 +203,21 @@ function initApp() {
 function showLoginPage() {
   document.getElementById('loginPage').classList.remove('hidden');
   document.getElementById('mainShell').classList.add('hidden');
-  var b = document.getElementById('_floatLogout');
-  if (b) b.remove();
 }
 
-function _ensureLogoutBtn() {
-  if (document.getElementById('_floatLogout')) return;
-  var b = document.createElement('button');
-  b.id = '_floatLogout';
-  b.textContent = 'ออกจากระบบ';
-  b.onclick = doLogout;
-  b.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:99999;padding:10px 28px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.3);';
-  document.body.appendChild(b);
+function toggleProfileDropdown() {
+  var dd = document.getElementById('profileDropdown');
+  if (dd) dd.classList.toggle('hidden');
 }
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  var wrap = document.getElementById('profileDropdownWrap');
+  if (wrap && !wrap.contains(e.target)) {
+    var dd = document.getElementById('profileDropdown');
+    if (dd) dd.classList.add('hidden');
+  }
+});
 
 function showMainShell() {
   document.getElementById('loginPage').classList.add('hidden');
@@ -240,36 +242,6 @@ function showMainShell() {
   document.getElementById('menuAssetMaintenance').style.display = notEmp ? '' : 'none';
   document.getElementById('menuAssetCommittees').style.display = notEmp ? '' : 'none';
   document.getElementById('menuAssetReports').style.display  = notEmp ? '' : 'none';
-  // Inject logout button if HTML is cached and doesn't have it
-  if (!document.getElementById('sidebarLogoutBtn')) {
-    var userInfoDiv = document.getElementById('sidebarName') && document.getElementById('sidebarName').closest('.border-t');
-    if (userInfoDiv) {
-      var btn = document.createElement('button');
-      btn.id = 'sidebarLogoutBtn';
-      btn.onclick = doLogout;
-      btn.innerHTML = '&#x2192; ออกจากระบบ';
-      btn.style.cssText = 'width:100%;padding:8px 12px;margin-top:8px;border-radius:10px;background:rgba(220,38,38,0.15);color:#f87171;font-size:14px;font-weight:500;border:none;cursor:pointer;display:block;';
-      btn.onmouseover = function(){ this.style.background='#dc2626'; this.style.color='#fff'; };
-      btn.onmouseout  = function(){ this.style.background='rgba(220,38,38,0.15)'; this.style.color='#f87171'; };
-      userInfoDiv.appendChild(btn);
-    }
-  }
-  // Inject top-bar logout button if missing
-  if (!document.getElementById('topLogoutBtn')) {
-    var profileBtn = document.querySelector('header [title="โปรไฟล์"]');
-    if (profileBtn && profileBtn.parentElement) {
-      var topBtn = document.createElement('button');
-      topBtn.id = 'topLogoutBtn';
-      topBtn.title = 'ออกจากระบบ';
-      topBtn.onclick = doLogout;
-      topBtn.innerHTML = '&#x21AA; ออกจากระบบ';
-      topBtn.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:#dc2626;color:#fff;font-size:13px;font-weight:600;border:none;cursor:pointer;margin-left:8px;';
-      topBtn.onmouseover = function(){ this.style.background='#b91c1c'; };
-      topBtn.onmouseout  = function(){ this.style.background='#dc2626'; };
-      profileBtn.parentElement.appendChild(topBtn);
-    }
-  }
-  _ensureLogoutBtn();
   updateClock();
   setInterval(updateClock, 60000);
 }
