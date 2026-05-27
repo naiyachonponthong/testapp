@@ -228,6 +228,20 @@ function showMainShell() {
   document.getElementById('menuAssetMaintenance').style.display = notEmp ? '' : 'none';
   document.getElementById('menuAssetCommittees').style.display = notEmp ? '' : 'none';
   document.getElementById('menuAssetReports').style.display  = notEmp ? '' : 'none';
+  // Inject logout button if HTML is cached and doesn't have it
+  if (!document.getElementById('sidebarLogoutBtn')) {
+    var userInfoDiv = document.getElementById('sidebarName') && document.getElementById('sidebarName').closest('.border-t');
+    if (userInfoDiv) {
+      var btn = document.createElement('button');
+      btn.id = 'sidebarLogoutBtn';
+      btn.onclick = doLogout;
+      btn.innerHTML = '&#x2192; ออกจากระบบ';
+      btn.style.cssText = 'width:100%;padding:8px 12px;margin-top:8px;border-radius:10px;background:rgba(220,38,38,0.15);color:#f87171;font-size:14px;font-weight:500;border:none;cursor:pointer;display:block;';
+      btn.onmouseover = function(){ this.style.background='#dc2626'; this.style.color='#fff'; };
+      btn.onmouseout  = function(){ this.style.background='rgba(220,38,38,0.15)'; this.style.color='#f87171'; };
+      userInfoDiv.appendChild(btn);
+    }
+  }
   updateClock();
   setInterval(updateClock, 60000);
 }
