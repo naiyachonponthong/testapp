@@ -295,6 +295,9 @@
         <button onclick="loadPage('profile')" class="w-8 h-8 bg-navy-700 rounded-xl flex items-center justify-center hover:bg-navy-800 transition" title="โปรไฟล์">
           <i class="fi fi-rr-user text-white text-sm"></i>
         </button>
+        <button id="topLogoutBtn" onclick="doLogout()" title="ออกจากระบบ" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:#dc2626;color:#fff;font-size:13px;font-weight:600;border:none;cursor:pointer;" onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">
+          <span>&#x21AA; ออกจากระบบ</span>
+        </button>
       </div>
     </header>
 
@@ -346,7 +349,7 @@
 
 <script src="api.js?v=3"></script>
 <script src="mock-api.js"></script>
-<script src="app.js?v=5"></script>
+<script src="app.js?v=6"></script>
 
 </body>
 </html>

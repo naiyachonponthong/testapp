@@ -242,6 +242,21 @@ function showMainShell() {
       userInfoDiv.appendChild(btn);
     }
   }
+  // Inject top-bar logout button if missing
+  if (!document.getElementById('topLogoutBtn')) {
+    var profileBtn = document.querySelector('header [title="โปรไฟล์"]');
+    if (profileBtn && profileBtn.parentElement) {
+      var topBtn = document.createElement('button');
+      topBtn.id = 'topLogoutBtn';
+      topBtn.title = 'ออกจากระบบ';
+      topBtn.onclick = doLogout;
+      topBtn.innerHTML = '&#x21AA; ออกจากระบบ';
+      topBtn.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:#dc2626;color:#fff;font-size:13px;font-weight:600;border:none;cursor:pointer;margin-left:8px;';
+      topBtn.onmouseover = function(){ this.style.background='#b91c1c'; };
+      topBtn.onmouseout  = function(){ this.style.background='#dc2626'; };
+      profileBtn.parentElement.appendChild(topBtn);
+    }
+  }
   updateClock();
   setInterval(updateClock, 60000);
 }
