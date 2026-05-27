@@ -289,6 +289,9 @@
       </div>
       <div class="flex items-center gap-2">
         <span id="topDateTime" class="text-xs text-gray-500 hidden lg:block"></span>
+        <button onclick="refreshPage()" id="refreshBtn" title="รีเฟรชข้อมูล" class="w-8 h-8 bg-gray-100 rounded-xl flex items-center justify-center hover:bg-gray-200 transition text-gray-600">
+          <i id="refreshIcon" class="fi fi-rr-rotate-right text-sm"></i>
+        </button>
         <!-- Profile Dropdown -->
         <div class="relative" id="profileDropdownWrap">
           <button onclick="toggleProfileDropdown()" class="w-8 h-8 bg-navy-700 rounded-xl flex items-center justify-center hover:bg-navy-800 transition" title="โปรไฟล์/ออกจากระบบ">
@@ -355,7 +358,7 @@
 
 <script src="api.js?v=3"></script>
 <script src="mock-api.js"></script>
-<script src="app.js?v=8"></script>
+<script src="app.js?v=9"></script>
 
 </body>
 </html>
