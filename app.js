@@ -968,8 +968,11 @@ function deleteItemConfirm(id, name) {
     showLoading('กำลังลบ...');
     callAPI('deleteItem', AUTH.token, id).then(function(res) {
       hideLoading();
-      if (res.success) { showSuccess(res.message); renderItems(); }
-      else showError(res.message);
+      if (res.success) {
+        showSuccess(res.message);
+        _itemsData = _itemsData.filter(function(i) { return i.id !== id; });
+        buildItemsPage();
+      } else showError(res.message);
     }).catch(function() { hideLoading(); showError('เกิดข้อผิดพลาด'); });
   }, 'ลบ');
 }
