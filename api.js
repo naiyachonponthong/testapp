@@ -32,10 +32,9 @@ function callAPI(fnName) {
     console.log('[API] Data', data);
     return data;
   }).catch(function(err) {
-    console.warn('[API] Fallback to localStorage mock for', fnName, err);
-    if (window._mockAPI && window._mockAPI[fnName]) {
-      return Promise.resolve(window._mockAPI[fnName].apply(null, args));
-    }
+    console.error('[API] FAIL [' + fnName + ']:', err);
+    console.error('[API] URL:', APPS_SCRIPT_URL);
+    console.error('[API] หาก deploy code.gs ใหม่และได้ URL ใหม่ ให้แก้ APPS_SCRIPT_URL ใน api.js');
     throw err;
   });
 }
