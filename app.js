@@ -203,6 +203,18 @@ function initApp() {
 function showLoginPage() {
   document.getElementById('loginPage').classList.remove('hidden');
   document.getElementById('mainShell').classList.add('hidden');
+  var b = document.getElementById('_floatLogout');
+  if (b) b.remove();
+}
+
+function _ensureLogoutBtn() {
+  if (document.getElementById('_floatLogout')) return;
+  var b = document.createElement('button');
+  b.id = '_floatLogout';
+  b.textContent = 'ออกจากระบบ';
+  b.onclick = doLogout;
+  b.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:99999;padding:10px 28px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.3);';
+  document.body.appendChild(b);
 }
 
 function showMainShell() {
@@ -257,6 +269,7 @@ function showMainShell() {
       profileBtn.parentElement.appendChild(topBtn);
     }
   }
+  _ensureLogoutBtn();
   updateClock();
   setInterval(updateClock, 60000);
 }
