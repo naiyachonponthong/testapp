@@ -251,7 +251,7 @@
     </nav>
 
     <!-- User Info -->
-    <div class="p-3 border-t border-navy-700 flex-shrink-0">
+    <div class="p-3 border-t border-navy-700 flex-shrink-0 space-y-2">
       <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-navy-700 cursor-pointer transition" onclick="loadPage('profile')">
         <div id="sidebarAvatar" class="w-9 h-9 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
           <i class="fi fi-rr-user text-white text-sm"></i>
@@ -260,10 +260,11 @@
           <p id="sidebarName" class="text-sm font-medium text-white truncate">—</p>
           <p id="sidebarRole" class="text-xs text-blue-300 truncate">—</p>
         </div>
-        <button onclick="event.stopPropagation(); doLogout()" title="ออกจากระบบ" class="flex-shrink-0 text-blue-400 hover:text-white transition">
-          <i class="fi fi-rr-sign-out text-sm"></i>
-        </button>
       </div>
+      <button onclick="doLogout()" class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white text-sm font-medium transition">
+        <i class="fi fi-rr-sign-out"></i>
+        <span>ออกจากระบบ</span>
+      </button>
     </div>
   </aside>
 
