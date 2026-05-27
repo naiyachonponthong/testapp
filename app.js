@@ -205,6 +205,18 @@ function showLoginPage() {
   document.getElementById('mainShell').classList.add('hidden');
 }
 
+function refreshPage() {
+  var icon = document.getElementById('refreshIcon');
+  if (icon) { icon.style.transition = 'transform 0.6s'; icon.style.transform = 'rotate(360deg)'; setTimeout(function(){ icon.style.transform = ''; }, 600); }
+  // ล้าง cache ทั้งหมด
+  _itemsData = []; _itemsCacheTime = 0;
+  _stockData = []; _wdData = []; _approveData = [];
+  _txData = []; _usersData = []; _assetData = [];
+  _pageCache = {};
+  // โหลดหน้าปัจจุบันใหม่
+  if (_currentPage) loadPage(_currentPage);
+}
+
 function toggleProfileDropdown() {
   var dd = document.getElementById('profileDropdown');
   if (dd) dd.classList.toggle('hidden');
