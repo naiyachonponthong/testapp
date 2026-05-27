@@ -251,7 +251,7 @@
     </nav>
 
     <!-- User Info -->
-    <div class="p-3 border-t border-navy-700 flex-shrink-0 space-y-2">
+    <div class="p-3 border-t border-navy-700 flex-shrink-0">
       <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-navy-700 cursor-pointer transition" onclick="loadPage('profile')">
         <div id="sidebarAvatar" class="w-9 h-9 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
           <i class="fi fi-rr-user text-white text-sm"></i>
@@ -261,9 +261,6 @@
           <p id="sidebarRole" class="text-xs text-blue-300 truncate">—</p>
         </div>
       </div>
-      <button id="sidebarLogoutBtn" onclick="doLogout()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(220,38,38,0.15);color:#f87171;font-size:14px;font-weight:500;border:none;cursor:pointer;" onmouseover="this.style.background='#dc2626';this.style.color='#fff'" onmouseout="this.style.background='rgba(220,38,38,0.15)';this.style.color='#f87171'">
-        <span>&#x2192; ออกจากระบบ</span>
-      </button>
     </div>
   </aside>
 
@@ -292,12 +289,21 @@
       </div>
       <div class="flex items-center gap-2">
         <span id="topDateTime" class="text-xs text-gray-500 hidden lg:block"></span>
-        <button onclick="loadPage('profile')" class="w-8 h-8 bg-navy-700 rounded-xl flex items-center justify-center hover:bg-navy-800 transition" title="โปรไฟล์">
-          <i class="fi fi-rr-user text-white text-sm"></i>
-        </button>
-        <button id="topLogoutBtn" onclick="doLogout()" title="ออกจากระบบ" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:#dc2626;color:#fff;font-size:13px;font-weight:600;border:none;cursor:pointer;" onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">
-          <span>&#x21AA; ออกจากระบบ</span>
-        </button>
+        <!-- Profile Dropdown -->
+        <div class="relative" id="profileDropdownWrap">
+          <button onclick="toggleProfileDropdown()" class="w-8 h-8 bg-navy-700 rounded-xl flex items-center justify-center hover:bg-navy-800 transition" title="โปรไฟล์/ออกจากระบบ">
+            <i class="fi fi-rr-user text-white text-sm"></i>
+          </button>
+          <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
+            <button onclick="toggleProfileDropdown(); loadPage('profile')" class="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition">
+              <i class="fi fi-rr-user text-gray-400"></i> โปรไฟล์
+            </button>
+            <hr class="border-gray-100">
+            <button onclick="toggleProfileDropdown(); doLogout()" class="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition">
+              <i class="fi fi-rr-sign-out text-red-400"></i> ออกจากระบบ
+            </button>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -349,7 +355,7 @@
 
 <script src="api.js?v=3"></script>
 <script src="mock-api.js"></script>
-<script src="app.js?v=7"></script>
+<script src="app.js?v=8"></script>
 
 </body>
 </html>
