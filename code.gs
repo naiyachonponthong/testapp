@@ -3,12 +3,6 @@
 // Version: 1.0 | Google Apps Script + Google Sheets
 // ============================================================
 
-// Spreadsheet ID — ชี้ตรงไปยัง Sheet ที่ถูกต้องเสมอ ไม่พึ่ง getActiveSpreadsheet()
-var SPREADSHEET_ID = '1HD_4Wvv8nliU_2omQjM--P_McxgTifOkle2xSEscd80';
-function getSpreadsheet() {
-  return SpreadsheetApp.openById(SPREADSHEET_ID);
-}
-
 const CONFIG = {
   APP_NAME: 'ระบบวัสดุสิ้นเปลือง',
   APP_VERSION: '1.0',
@@ -206,7 +200,7 @@ function jsonResponse(data) {
 
 /** whichSpreadsheet — debug: ดู URL และชื่อ Spreadsheet ที่ Apps Script อ่านจริง */
 function whichSpreadsheet() {
-  var ss = getSpreadsheet();
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
   Logger.log('Name: ' + ss.getName());
   Logger.log('URL:  ' + ss.getUrl());
   Logger.log('ID:   ' + ss.getId());
@@ -218,7 +212,7 @@ function whichSpreadsheet() {
 
 /** resetAllData — ลบข้อมูลทั้งหมดและ seed ใหม่ (ระวัง: ลบทุกอย่าง) */
 function resetAllData() {
-  var ss = getSpreadsheet();
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
   ['Items', 'Receives', 'Withdrawals', 'Transactions', 'Sessions', 'Errors',
    'Assets', 'MaintenanceRecords', 'StatusLogs', 'Committees'].forEach(function(name) {
     var sh = ss.getSheetByName(name);
@@ -231,7 +225,7 @@ function resetAllData() {
 }
 
 function initializeSheets() {
-  var ss = getSpreadsheet();
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheetNames = ss.getSheets().map(function(s){ return s.getName(); });
 
   var required = {
@@ -1550,7 +1544,7 @@ function deleteAssetCommittee(token, id) {
 /** getSheetData — อ่านข้อมูลทั้งหมดจาก Sheet */
 function getSheetData(sheetName) {
   try {
-    var sheet = getSpreadsheet().getSheetByName(sheetName);
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
     if (!sheet || sheet.getLastRow() < 2) return [];
     return sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues()
       .filter(function(r){ return r[0] && r[0] !== ''; })
@@ -1561,7 +1555,7 @@ function getSheetData(sheetName) {
 
 /** saveToSheet — เพิ่มข้อมูลใหม่ */
 function saveToSheet(sheetName, data) {
-  var sheet = getSpreadsheet().getSheetByName(sheetName);
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
   if (!data.id) data.id = Utilities.getUuid();
   if (!data.created_at) data.created_at = new Date().toISOString();
   data.updated_at = new Date().toISOString();
@@ -1571,7 +1565,7 @@ function saveToSheet(sheetName, data) {
 
 /** updateInSheet — อัพเดตข้อมูลตาม id */
 function updateInSheet(sheetName, id, updates) {
-  var sheet = getSpreadsheet().getSheetByName(sheetName);
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
   var rows = sheet.getRange(2, 1, Math.max(sheet.getLastRow() - 1, 1), 1).getValues();
   for (var i = 0; i < rows.length; i++) {
     try {
@@ -1589,7 +1583,7 @@ function updateInSheet(sheetName, id, updates) {
 
 /** deleteFromSheet — ลบแถว (hard delete) */
 function deleteFromSheet(sheetName, id, hard) {
-  var sheet = getSpreadsheet().getSheetByName(sheetName);
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
   var rows = sheet.getRange(2, 1, Math.max(sheet.getLastRow() - 1, 1), 1).getValues();
   for (var i = rows.length - 1; i >= 0; i--) {
     try {
@@ -1635,7 +1629,7 @@ function verifyPassword(plain, hashed) {
 /** logError — บันทึก error */
 function logError(fnName, err) {
   try {
-    var sheet = getSpreadsheet().getSheetByName('Errors');
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Errors');
     if (!sheet) return;
     var data = { id: Utilities.getUuid(), function_name: fnName,
       error_message: err.message || String(err), stack_trace: err.stack || '',
