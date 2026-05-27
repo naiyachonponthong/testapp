@@ -1746,7 +1746,15 @@ function submitWithdraw() {
     hideLoading(); closeModal();
     if (res.success) {
       showSuccess('ยื่นคำขอ ' + res.withdraw_no + ' เรียบร้อย รอการอนุมัติ');
-      if (_currentPage === 'withdraw') renderWithdraw();
+      // อัปเดต local cache ทันที ไม่ต้องรอ refresh
+      for (var i = 0; i < _itemsData.length; i++) {
+        if (_itemsData[i].id === itemId) {
+          _itemsData[i].current_stock = (_itemsData[i].current_stock || 0) - qty;
+          break;
+        }
+      }
+      if (_currentPage === 'stock') { _itemsPage = 1; buildItemsPage(); }
+      else if (_currentPage === 'withdraw') renderWithdraw();
       else if (_currentPage === 'dashboard') renderDashboard();
     } else showError(res.message);
   }).catch(function() { hideLoading(); showError('เกิดข้อผิดพลาด'); });
