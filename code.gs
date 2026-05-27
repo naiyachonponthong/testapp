@@ -198,6 +198,32 @@ function jsonResponse(data) {
   return output;
 }
 
+/** whichSpreadsheet — debug: ดู URL และชื่อ Spreadsheet ที่ Apps Script อ่านจริง */
+function whichSpreadsheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  Logger.log('Name: ' + ss.getName());
+  Logger.log('URL:  ' + ss.getUrl());
+  Logger.log('ID:   ' + ss.getId());
+  var items = getSheetData('Items');
+  Logger.log('Items count: ' + items.length);
+  if (items.length > 0) Logger.log('First item: ' + JSON.stringify(items[0]));
+  return { name: ss.getName(), url: ss.getUrl(), id: ss.getId(), items_count: items.length };
+}
+
+/** resetAllData — ลบข้อมูลทั้งหมดและ seed ใหม่ (ระวัง: ลบทุกอย่าง) */
+function resetAllData() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  ['Items', 'Receives', 'Withdrawals', 'Transactions', 'Sessions', 'Errors',
+   'Assets', 'MaintenanceRecords', 'StatusLogs', 'Committees'].forEach(function(name) {
+    var sh = ss.getSheetByName(name);
+    if (sh && sh.getLastRow() > 1) {
+      sh.deleteRows(2, sh.getLastRow() - 1);
+    }
+  });
+  initializeSheets();
+  return { success: true, message: 'ลบและ seed ข้อมูลใหม่เรียบร้อย' };
+}
+
 function initializeSheets() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheetNames = ss.getSheets().map(function(s){ return s.getName(); });
