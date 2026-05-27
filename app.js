@@ -624,7 +624,14 @@ var _itemsFilter = { search:'', category:'all', stock:'all' };
 var _itemImageFileId = null;
 var _itemsCacheTime = 0;
 var _configLogoFileId = null;
-var ITEMS_CACHE_TTL = 30000; // 30 วินาที
+var ITEMS_CACHE_TTL = 3000; // 3 วินาที (cache สั้น ๆ เพื่อให้ข้อมูลตรง Sheet เสมอ)
+
+// Auto-clear cache เมื่อกลับมาที่ tab เว็บ (เผื่อเปลี่ยนข้อมูลจาก Google Sheets)
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'visible') {
+    _itemsCacheTime = 0;
+  }
+});
 
 function renderItems() {
   if (AUTH.user.role !== 'admin') { loadPage('stock'); return; }
