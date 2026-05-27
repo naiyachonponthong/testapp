@@ -1753,7 +1753,9 @@ function submitWithdraw() {
           break;
         }
       }
-      if (_currentPage === 'stock') { _itemsPage = 1; buildItemsPage(); }
+      _stockData = _itemsData;
+      if (_currentPage === 'stock') buildStockPage();
+      else if (_currentPage === 'items') { _itemsPage = 1; buildItemsPage(); }
       else if (_currentPage === 'withdraw') renderWithdraw();
       else if (_currentPage === 'dashboard') renderDashboard();
     } else showError(res.message);
