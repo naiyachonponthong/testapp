@@ -683,14 +683,36 @@ function addWithdrawal(token, wdData) {
       reject_reason: '',
       via_qr: wdData.via_qr || false
     };
+    // หักสต็อกทันทีเมื่อยื่นคำขอ เพื่อป้องกันเบิกเกินสต็อก
+    var stockBefore = item.current_stock;
+    var stockAfter  = stockBefore - qty;
+    updateInSheet('Items', item.id, { current_stock: stockAfter });
+
     saveToSheet('Withdrawals', wd);
+
+    // บันทึก Transaction (reserved)
+    saveToSheet('Transactions', {
+      id: Utilities.getUuid(),
+      type: 'withdraw_reserved',
+      item_id: item.id,
+      item_name: item.name,
+      item_code: item.item_code || '',
+      quantity: qty,
+      stock_before: stockBefore,
+      stock_after: stockAfter,
+      reference_no: wdNo,
+      note: 'จองสต็อก รอการอนุมัติ',
+      created_by: session.user_id,
+      created_by_name: session.name,
+      created_at: new Date().toISOString()
+    });
 
     var msg = '<b>คำขอเบิกใหม่</b> #' + wdNo
       + '\nรายการ: ' + item.name
       + '\nจำนวน: ' + qty + ' ' + item.unit
       + '\nผู้ขอ: ' + session.name + ' (' + CONFIG.USER_ROLES[session.role].name + ')'
       + '\nวัตถุประสงค์: ' + (wdData.purpose || '-')
-      + '\nสต็อกคงเหลือ: ' + item.current_stock + ' ' + item.unit;
+      + '\nสต็อกคงเหลือ: ' + stockAfter + ' ' + item.unit + ' (หักแล้ว)';
     sendTelegram(msg);
 
     return { success: true, message: 'ยื่นคำขอเบิกเรียบร้อย รอการอนุมัติ', withdraw_no: wdNo };
@@ -735,21 +757,26 @@ function approveWithdrawal(token, wdId, qtyApproved) {
 
       var qty = parseInt(qtyApproved) || wd.quantity_requested;
 
-      // ดึง item และตัด stock
+      // สต็อกถูกหักไปแล้วตอนยื่นคำขอ — ตรวจเฉพาะกรณี qtyApproved น้อยกว่าที่ขอ
       var items = getSheetData('Items');
       var item = null;
       for (var j = 0; j < items.length; j++) {
         if (items[j].id === wd.item_id) { item = items[j]; break; }
       }
       if (!item) return { success: false, message: 'ไม่พบรายการวัสดุ' };
-      if (qty > item.current_stock) return { success: false, message: 'สต็อกไม่พอ (' + item.current_stock + ' ' + item.unit + ')' };
 
+      var now = new Date().toISOString();
       var stockBefore = item.current_stock;
-      var stockAfter = stockBefore - qty;
-      updateInSheet('Items', item.id, { current_stock: stockAfter });
+      var stockAfter  = stockBefore;
+
+      // ถ้า admin อนุมัติน้อยกว่าที่ขอ → คืนส่วนต่างกลับ
+      var diff = wd.quantity_requested - qty;
+      if (diff > 0) {
+        stockAfter = stockBefore + diff;
+        updateInSheet('Items', item.id, { current_stock: stockAfter });
+      }
 
       // อัพเดต Withdrawal
-      var now = new Date().toISOString();
       updateInSheet('Withdrawals', wdId, {
         status: 'approved',
         quantity_approved: qty,
@@ -813,6 +840,16 @@ function rejectWithdrawal(token, wdId, reason) {
       if (wds[i].id === wdId) { wd = wds[i]; break; }
     }
     if (!wd || wd.status !== 'pending') return { success: false, message: 'ไม่พบคำขอหรือดำเนินการแล้ว' };
+
+    // คืนสต็อกที่หักไปตอนยื่นคำขอ
+    var items = getSheetData('Items');
+    for (var j = 0; j < items.length; j++) {
+      if (items[j].id === wd.item_id) {
+        updateInSheet('Items', items[j].id, { current_stock: (items[j].current_stock || 0) + wd.quantity_requested });
+        break;
+      }
+    }
+
     updateInSheet('Withdrawals', wdId, {
       status: 'rejected',
       approved_by: session.user_id,
@@ -845,6 +882,16 @@ function cancelWithdrawal(token, wdId) {
     if (!wd) return { success: false, message: 'ไม่พบคำขอ' };
     if (wd.requested_by !== session.user_id) return { success: false, message: 'ไม่มีสิทธิ์ยกเลิก' };
     if (wd.status !== 'pending') return { success: false, message: 'คำขอนี้ดำเนินการแล้ว' };
+
+    // คืนสต็อกที่หักไปตอนยื่นคำขอ
+    var items = getSheetData('Items');
+    for (var k = 0; k < items.length; k++) {
+      if (items[k].id === wd.item_id) {
+        updateInSheet('Items', items[k].id, { current_stock: (items[k].current_stock || 0) + wd.quantity_requested });
+        break;
+      }
+    }
+
     updateInSheet('Withdrawals', wdId, {
       status: 'rejected',
       reject_reason: 'ยกเลิกโดยผู้ขอ',
