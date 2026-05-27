@@ -38,7 +38,7 @@
         </button>
         <button onclick="setLoginRole('staff')" id="tabStaff"
           class="role-tab flex-1 py-3.5 text-sm font-semibold text-center transition-all border-b-2 border-transparent text-gray-400 hover:text-gray-600">
-          <i class="fi fi-rr-user-gear mr-1"></i> เจ้าหน้าที่
+          <i class="fi fi-rr-user mr-1"></i> เจ้าหน้าที่
         </button>
         <button onclick="setLoginRole('employee')" id="tabEmployee"
           class="role-tab flex-1 py-3.5 text-sm font-semibold text-center transition-all border-b-2 border-transparent text-gray-400 hover:text-gray-600">
@@ -206,25 +206,25 @@
           <li id="menuAssetStatus">
             <button onclick="loadPage('assetstatus')" data-page="assetstatus"
               class="menu-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm hover:bg-navy-700 transition text-blue-100">
-              <i class="fi fi-rr-tag w-4 text-center text-base"></i><span>อัปเดตสถานภาพ</span>
+              <i class="fi fi-rr-shield-check w-4 text-center text-base"></i><span>อัปเดตสถานภาพ</span>
             </button>
           </li>
           <li id="menuAssetMaintenance">
             <button onclick="loadPage('assetmaintenance')" data-page="assetmaintenance"
               class="menu-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm hover:bg-navy-700 transition text-blue-100">
-              <i class="fi fi-rr-wrench w-4 text-center text-base"></i><span>ซ่อมบำรุง</span>
+              <i class="fi fi-rr-settings w-4 text-center text-base"></i><span>ซ่อมบำรุง</span>
             </button>
           </li>
           <li id="menuAssetCommittees">
             <button onclick="loadPage('assetcommittees')" data-page="assetcommittees"
               class="menu-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm hover:bg-navy-700 transition text-blue-100">
-              <i class="fi fi-rr-users-alt w-4 text-center text-base"></i><span>คณะกรรมการ</span>
+              <i class="fi fi-rr-users w-4 text-center text-base"></i><span>คณะกรรมการ</span>
             </button>
           </li>
           <li id="menuAssetReports">
             <button onclick="loadPage('assetreports')" data-page="assetreports"
               class="menu-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm hover:bg-navy-700 transition text-blue-100">
-              <i class="fi fi-rr-file-invoice w-4 text-center text-base"></i><span>รายงานครุภัณฑ์</span>
+              <i class="fi fi-rr-chart-histogram w-4 text-center text-base"></i><span>รายงานครุภัณฑ์</span>
             </button>
           </li>
         </ul>
@@ -323,7 +323,7 @@
     <div class="flex items-center justify-between px-6 py-4 border-b flex-shrink-0">
       <h3 id="modalTitle" class="text-base font-bold text-gray-800"></h3>
       <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition">
-        <i class="fi fi-rr-cross text-sm"></i>
+        <i class="fi fi-rr-times text-sm"></i>
       </button>
     </div>
     <div id="modalBody" class="p-6 overflow-y-auto flex-1"></div>
